@@ -27,10 +27,12 @@ public class TerrainGeneration : MonoBehaviour
     public float Scale = 0.01f;
     public float NormalizeBias = 1.0f;
 
-    private GameObject mRealTerrain;
-    private NoiseAlgorithm mTerrainNoise;
+    private GameObject terrainObject;
+    private MeshFilter terrainMeshFilter;
+    private MeshRenderer terrainMeshRenderer;
+    private NoiseAlgorithm terrainNoise;
     private NativeArray<float> terrainHeightMap;
-    private GameObject mLight;
+    private List<MapFunction> mapFunctions;
 
     public float A
     {
@@ -38,7 +40,10 @@ public class TerrainGeneration : MonoBehaviour
         set
         {
             _a = value;
-            aText.text = $"<b>A</b> = {_a}";
+
+            Vector2 aRange = mapFunctions[equationDropdown.value].ARange;
+            aText.text = $"<b>A</b> = {_a:0.0000} <i>[{aRange.x} to {aRange.y}]</i>";
+
             UpdateTerrainMesh();
         }
     }
@@ -50,7 +55,10 @@ public class TerrainGeneration : MonoBehaviour
         set
         {
             _b = value;
-            bText.text = $"<b>B</b> = {_b}";
+
+            Vector2 bRange = mapFunctions[equationDropdown.value].BRange;
+            bText.text = $"<b>B</b> = {_b:0.0000} <i>[{bRange.x} to {bRange.y}]</i>";
+
             UpdateTerrainMesh();
         }
     }
@@ -97,44 +105,64 @@ public class TerrainGeneration : MonoBehaviour
     void Start()
     {
         // create a height map using perlin noise and fractal brownian motion
-        mTerrainNoise = new NoiseAlgorithm();
-        mTerrainNoise.InitializeNoise(Width + 1, Depth + 1, RandomSeed);
-        mTerrainNoise.InitializePerlinNoise(Frequency, Amplitude, Octaves,
+        terrainNoise = new NoiseAlgorithm();
+        terrainNoise.InitializeNoise(Width + 1, Depth + 1, RandomSeed);
+        terrainNoise.InitializePerlinNoise(Frequency, Amplitude, Octaves,
             Lacunarity, Gain, Scale, NormalizeBias);
         terrainHeightMap = new NativeArray<float>((Width + 1) * (Depth + 1), Allocator.Persistent);
-        mTerrainNoise.setNoise(terrainHeightMap, 0, 0);
-        //terrainHeightMap.Dispose();
+        terrainNoise.setNoise(terrainHeightMap, 0, 0);
         NoiseAlgorithm.OnExit();
 
         // create the mesh and set it to the terrain variable
-        mRealTerrain = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        mRealTerrain.transform.position = new Vector3(0, 0, 0);
+        terrainObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        terrainObject.transform.position = new Vector3(0, 0, 0);
+        terrainMeshRenderer = terrainObject.GetComponent<MeshRenderer>();
+        terrainMeshFilter = terrainObject.GetComponent<MeshFilter>();
 
-        _a = 0.1f;
-        aSlider.value = A;
         aSlider.onValueChanged.AddListener((v) => { A = v; });
-        _b = 0.1f;
-        bSlider.value = B;
         bSlider.onValueChanged.AddListener((v) => { B = v; });
+
+        mapFunctions = new List<MapFunction>()
+        {
+            new MapFunction("x <i>cos</i>(<b>A</b>x) <i>sin</i>(<b>B</b>z)", new Vector2(-0.2f, 0.2f), new Vector2(-0.2f, 0.2f), (float x, float z) => { return 0f; })
+        };
 
         equationDropdown.AddOptions(new List<TMP_Dropdown.OptionData>()
         {
-            new TMP_Dropdown.OptionData("x <i>cos</i>(<b>A</b>x) <i>sin</i>(<b>B</b>z)"),
+            new TMP_Dropdown.OptionData(),
             new TMP_Dropdown.OptionData("<b>A</b><i>sin</i>(<b>B</b><i>sqrt</i>(x^2 + z^2))"),
             new TMP_Dropdown.OptionData("-<b>A</b>(<b>B</b> - 0.2<i>sqrt</i>(x^2 + z^2))^2"),
-            new TMP_Dropdown.OptionData("<b>A</b>z<i>sin</i>(<b>B</b>xy)")
+            new TMP_Dropdown.OptionData("<b>A</b>z<i>sin</i>(0.02<b>B</b>xy)"),
+            new TMP_Dropdown.OptionData("<b>A</b>cos(<b>B</b>(|x| + |z|))"),
         });
-        equationDropdown.onValueChanged.AddListener((v) => { UpdateTerrainMesh(); });
+
+        equationDropdown.onValueChanged.AddListener((v) => {
+            MapFunction currentFunction = mapFunctions[v];
+
+            // Update UI
+            aSlider.minValue = currentFunction.ARange.x;
+            aSlider.maxValue = currentFunction.ARange.y;
+            aSlider.value = currentFunction.ARangeCenter;
+
+            bSlider.minValue = currentFunction.BRange.x;
+            bSlider.maxValue = currentFunction.BRange.y;
+            bSlider.value = currentFunction.BRangeCenter;
+
+            UpdateTerrainMesh();
+        });
 
         UpdateTerrainMesh();
     }
 
     public void UpdateTerrainMesh()
     {
-        MeshRenderer meshRenderer = mRealTerrain.GetComponent<MeshRenderer>();
-        MeshFilter meshFilter = mRealTerrain.GetComponent<MeshFilter>();
-        meshRenderer.material = TerrainMaterial;
-        meshFilter.mesh = GenerateTerrainMesh(terrainHeightMap);
+        // Update UI based on the new map function selected
+
+        // Update the shape of the terrain mesh
+        terrainMeshFilter.mesh = GenerateTerrainMesh(terrainHeightMap);
+
+        // Update the material of the terrain mesh
+        terrainMeshRenderer.material = TerrainMaterial;
     }
 
     // create a new mesh with
@@ -211,13 +239,15 @@ public class TerrainGeneration : MonoBehaviour
         z -= depth / 2f;
 
         //return z * Mathf.Sin(x * x);
+        //return 0.001f * ((A * x * z * z * z) - (B * z * x * x * x));
 
         switch (equationDropdown.value)
         {
             case 0: return x * Mathf.Cos(A * x) * Mathf.Sin(B * z);
             case 1: return A * Mathf.Sin(B * Mathf.Sqrt((x * x) + (z * z)));
             case 2: return -A * Mathf.Pow(B - (0.2f * Mathf.Sqrt((x * x) + (z * z))), 2);
-            case 3: return A * z * Mathf.Sin(B * x * z);
+            case 3: return A * z * Mathf.Sin(0.02f * B * x * z);
+            case 4: return A * Mathf.Cos(B * (Mathf.Abs(x) + Mathf.Abs(z)));
             default: return 0f;
         }
     }
