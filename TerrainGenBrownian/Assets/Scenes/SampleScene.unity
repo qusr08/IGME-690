@@ -2979,7 +2979,6 @@ MonoBehaviour:
   bText: {fileID: 1554589652}
   bSlider: {fileID: 1830111840}
   equationDropdown: {fileID: 551980883}
-  RandomSeed: 2352
   Width: 128
   Depth: 128
   NoiseHeightMultiplier: 100

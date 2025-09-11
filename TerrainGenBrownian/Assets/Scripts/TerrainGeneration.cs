@@ -14,7 +14,6 @@ public class TerrainGeneration : MonoBehaviour
     [SerializeField] private Slider bSlider;
     [SerializeField] private TMP_Dropdown equationDropdown;
     [Space]
-    public int RandomSeed;
     public int Width;
     public int Depth;
     public int NoiseHeightMultiplier;
@@ -40,10 +39,8 @@ public class TerrainGeneration : MonoBehaviour
         set
         {
             _a = value;
-
             Vector2 aRange = mapFunctions[equationDropdown.value].ARange;
             aText.text = $"<b>A</b> = {_a:0.0000} <i>[{aRange.x} to {aRange.y}]</i>";
-
             UpdateTerrainMesh();
         }
     }
@@ -55,10 +52,8 @@ public class TerrainGeneration : MonoBehaviour
         set
         {
             _b = value;
-
             Vector2 bRange = mapFunctions[equationDropdown.value].BRange;
             bText.text = $"<b>B</b> = {_b:0.0000} <i>[{bRange.x} to {bRange.y}]</i>";
-
             UpdateTerrainMesh();
         }
     }
@@ -106,9 +101,8 @@ public class TerrainGeneration : MonoBehaviour
     {
         // create a height map using perlin noise and fractal brownian motion
         terrainNoise = new NoiseAlgorithm();
-        terrainNoise.InitializeNoise(Width + 1, Depth + 1, RandomSeed);
-        terrainNoise.InitializePerlinNoise(Frequency, Amplitude, Octaves,
-            Lacunarity, Gain, Scale, NormalizeBias);
+        terrainNoise.InitializeNoise(Width + 1, Depth + 1, UnityEngine.Random.Range(int.MinValue, int.MaxValue));
+        terrainNoise.InitializePerlinNoise(Frequency, Amplitude, Octaves, Lacunarity, Gain, Scale, NormalizeBias);
         terrainHeightMap = new NativeArray<float>((Width + 1) * (Depth + 1), Allocator.Persistent);
         terrainNoise.setNoise(terrainHeightMap, 0, 0);
         NoiseAlgorithm.OnExit();
@@ -119,47 +113,47 @@ public class TerrainGeneration : MonoBehaviour
         terrainMeshRenderer = terrainObject.GetComponent<MeshRenderer>();
         terrainMeshFilter = terrainObject.GetComponent<MeshFilter>();
 
-        aSlider.onValueChanged.AddListener((v) => { A = v; });
-        bSlider.onValueChanged.AddListener((v) => { B = v; });
-
         mapFunctions = new List<MapFunction>()
         {
-            new MapFunction("x <i>cos</i>(<b>A</b>x) <i>sin</i>(<b>B</b>z)", new Vector2(-0.2f, 0.2f), new Vector2(-0.2f, 0.2f), (float x, float z) => { return 0f; })
+            new MapFunction("x<i>cos</i>(<b>A</b>x)<i>sin</i>(<b>B</b>z)",
+                new Vector2(0f, 0.2f), new Vector2(0f, 0.2f),
+                (float x, float z) => { return x * Mathf.Cos(A * x) * Mathf.Sin(B * z); }),
+            new MapFunction("<b>A</b><i>sin</i>(<b>B</b><i>sqrt</i>(x^2 + z^2))",
+                new Vector2(0f, 5f), new Vector2(0f, 1f),
+                (float x, float z) => { return A * Mathf.Sin(B * Mathf.Sqrt((x * x) + (z * z))); }),
+            new MapFunction("-<b>A</b>(<b>B</b> - 0.2<i>sqrt</i>(x^2 + z^2))^2",
+                new Vector2(-1f, 5f), new Vector2(0f, 5f),
+                (float x, float z) => { return -A * Mathf.Pow(B - (0.2f * Mathf.Sqrt((x * x) + (z * z))), 2); }),
+            new MapFunction("<b>A</b>z<i>sin</i>(<b>B</b>xy)",
+                new Vector2(0f, 1f), new Vector2(0f, 0.05f),
+                (float x, float z) => { return A * z * Mathf.Sin(B * x * z); }),
+            new MapFunction("<b>A</b>cos(<b>B</b>(|x| + |z|))",
+                new Vector2(0f, 5f), new Vector2(0f, 0.5f),
+                (float x, float z) => { return A * Mathf.Cos(B * (Mathf.Abs(x) + Mathf.Abs(z))); }),
         };
 
-        equationDropdown.AddOptions(new List<TMP_Dropdown.OptionData>()
+        // z * Mathf.Sin(x * x);
+        // 0.001f * ((A * x * z * z * z) - (B * z * x * x * x));
+
+        List<TMP_Dropdown.OptionData> optionsList = new List<TMP_Dropdown.OptionData>();
+        for (int i = 0; i < mapFunctions.Count; i++)
         {
-            new TMP_Dropdown.OptionData(),
-            new TMP_Dropdown.OptionData("<b>A</b><i>sin</i>(<b>B</b><i>sqrt</i>(x^2 + z^2))"),
-            new TMP_Dropdown.OptionData("-<b>A</b>(<b>B</b> - 0.2<i>sqrt</i>(x^2 + z^2))^2"),
-            new TMP_Dropdown.OptionData("<b>A</b>z<i>sin</i>(0.02<b>B</b>xy)"),
-            new TMP_Dropdown.OptionData("<b>A</b>cos(<b>B</b>(|x| + |z|))"),
-        });
+            optionsList.Add(new TMP_Dropdown.OptionData(mapFunctions[i].FunctionText));
+        }
+        equationDropdown.AddOptions(optionsList);
 
-        equationDropdown.onValueChanged.AddListener((v) => {
-            MapFunction currentFunction = mapFunctions[v];
+        // Add UI value change listeners
+        aSlider.onValueChanged.AddListener((v) => { A = v; });
+        bSlider.onValueChanged.AddListener((v) => { B = v; });
+        equationDropdown.onValueChanged.AddListener(SetCurrentMapFunction);
 
-            // Update UI
-            aSlider.minValue = currentFunction.ARange.x;
-            aSlider.maxValue = currentFunction.ARange.y;
-            aSlider.value = currentFunction.ARangeCenter;
-
-            bSlider.minValue = currentFunction.BRange.x;
-            bSlider.maxValue = currentFunction.BRange.y;
-            bSlider.value = currentFunction.BRangeCenter;
-
-            UpdateTerrainMesh();
-        });
-
-        UpdateTerrainMesh();
+        SetCurrentMapFunction(0);
     }
 
     public void UpdateTerrainMesh()
     {
-        // Update UI based on the new map function selected
-
         // Update the shape of the terrain mesh
-        terrainMeshFilter.mesh = GenerateTerrainMesh(terrainHeightMap);
+        terrainMeshFilter.mesh = GenerateTerrainMesh();
 
         // Update the material of the terrain mesh
         terrainMeshRenderer.material = TerrainMaterial;
@@ -169,7 +163,7 @@ public class TerrainGeneration : MonoBehaviour
     // perlin noise
     // makes a quad and connects it with the next quad
     // uses whatever texture the material is given
-    public Mesh GenerateTerrainMesh(NativeArray<float> heightMap)
+    public Mesh GenerateTerrainMesh()
     {
         int width = Width + 1, depth = Depth + 1;
         int indicesIndex = 0;
@@ -184,41 +178,42 @@ public class TerrainGeneration : MonoBehaviour
         {
             for (int z = 0; z < depth; z++)
             {
-                if (x < width - 1 && z < depth - 1)
+                if (x >= width - 1 || z >= depth - 1)
                 {
-                    // note: since perlin goes up to 1.0 multiplying by a height will tend to set
-                    // the average around maxheight/2. We remove most of that extra by subtracting maxheight/2
-                    // so our ground isn't always way up in the air
-                    float y = evaulateEquationAt(x, z, width, depth) + heightMap[(x) * (width) + (z)] * NoiseHeightMultiplier;
-                    float useAltXPlusY = evaulateEquationAt(x + 1, z, width, depth) + heightMap[(x + 1) * (width) + (z)] * NoiseHeightMultiplier;
-                    float useAltZPlusY = evaulateEquationAt(x, z + 1, width, depth) + heightMap[(x) * (width) + (z + 1)] * NoiseHeightMultiplier;
-                    float useAltXAndZPlusY = evaulateEquationAt(x + 1, z + 1, width, depth) + heightMap[(x + 1) * (width) + (z + 1)] * NoiseHeightMultiplier;
-
-                    vert.Add(new float3(x, y, z));
-                    vert.Add(new float3(x, useAltZPlusY, z + 1));
-                    vert.Add(new float3(x + 1, useAltXPlusY, z));
-                    vert.Add(new float3(x + 1, useAltXAndZPlusY, z + 1));
-
-                    // add uv's
-                    // remember to give it all 4 sides of the image coords
-                    uvs.Add(new Vector2(0.0f, 0.0f));
-                    uvs.Add(new Vector2(0.0f, 1.0f));
-                    uvs.Add(new Vector2(1.0f, 0.0f));
-                    uvs.Add(new Vector2(1.0f, 1.0f));
-
-                    // front or top face indices for a quad
-                    //0,2,1,0,3,2
-                    indices.Add(vertexIndex);
-                    indices.Add(vertexIndex + 1);
-                    indices.Add(vertexIndex + 2);
-                    indices.Add(vertexIndex + 3);
-                    indices.Add(vertexIndex + 2);
-                    indices.Add(vertexIndex + 1);
-                    indicesIndex += 6;
-                    vertexIndex += vertexMultiplier;
+                    continue;
                 }
-            }
 
+                // note: since perlin goes up to 1.0 multiplying by a height will tend to set
+                // the average around maxheight/2. We remove most of that extra by subtracting maxheight/2
+                // so our ground isn't always way up in the air
+                float y = EvaluateMapFunctionAt(x, z, width, depth) + terrainHeightMap[(x) * (depth) + (z)] * NoiseHeightMultiplier;
+                float useAltXPlusY = EvaluateMapFunctionAt(x + 1, z, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z)] * NoiseHeightMultiplier;
+                float useAltZPlusY = EvaluateMapFunctionAt(x, z + 1, width, depth) + terrainHeightMap[(x) * (depth) + (z + 1)] * NoiseHeightMultiplier;
+                float useAltXAndZPlusY = EvaluateMapFunctionAt(x + 1, z + 1, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z + 1)] * NoiseHeightMultiplier;
+
+                vert.Add(new float3(x, y, z));
+                vert.Add(new float3(x, useAltZPlusY, z + 1));
+                vert.Add(new float3(x + 1, useAltXPlusY, z));
+                vert.Add(new float3(x + 1, useAltXAndZPlusY, z + 1));
+
+                // add uv's
+                // remember to give it all 4 sides of the image coords
+                uvs.Add(new Vector2(0.0f, 0.0f));
+                uvs.Add(new Vector2(0.0f, 1.0f));
+                uvs.Add(new Vector2(1.0f, 0.0f));
+                uvs.Add(new Vector2(1.0f, 1.0f));
+
+                // front or top face indices for a quad
+                //0,2,1,0,3,2
+                indices.Add(vertexIndex);
+                indices.Add(vertexIndex + 1);
+                indices.Add(vertexIndex + 2);
+                indices.Add(vertexIndex + 3);
+                indices.Add(vertexIndex + 2);
+                indices.Add(vertexIndex + 1);
+                indicesIndex += 6;
+                vertexIndex += vertexMultiplier;
+            }
         }
 
         // set the terrain var's for the mesh
@@ -233,22 +228,21 @@ public class TerrainGeneration : MonoBehaviour
         return terrainMesh;
     }
 
-    private float evaulateEquationAt(float x, float z, float width, float depth)
+    private float EvaluateMapFunctionAt(float x, float z, float width, float depth)
     {
-        x -= width / 2f;
-        z -= depth / 2f;
+        return mapFunctions[equationDropdown.value].Evaluate(x - width / 2f, z - depth / 2f);
+    }
 
-        //return z * Mathf.Sin(x * x);
-        //return 0.001f * ((A * x * z * z * z) - (B * z * x * x * x));
+    private void SetCurrentMapFunction(int index)
+    {
+        MapFunction currentFunction = mapFunctions[index];
 
-        switch (equationDropdown.value)
-        {
-            case 0: return x * Mathf.Cos(A * x) * Mathf.Sin(B * z);
-            case 1: return A * Mathf.Sin(B * Mathf.Sqrt((x * x) + (z * z)));
-            case 2: return -A * Mathf.Pow(B - (0.2f * Mathf.Sqrt((x * x) + (z * z))), 2);
-            case 3: return A * z * Mathf.Sin(0.02f * B * x * z);
-            case 4: return A * Mathf.Cos(B * (Mathf.Abs(x) + Mathf.Abs(z)));
-            default: return 0f;
-        }
+        aSlider.minValue = currentFunction.ARange.x;
+        aSlider.maxValue = currentFunction.ARange.y;
+        aSlider.value = currentFunction.ARangeCenter;
+
+        bSlider.minValue = currentFunction.BRange.x;
+        bSlider.maxValue = currentFunction.BRange.y;
+        bSlider.value = currentFunction.BRangeCenter;
     }
 }
