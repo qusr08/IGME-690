@@ -2979,8 +2979,8 @@ MonoBehaviour:
   bText: {fileID: 1554589652}
   bSlider: {fileID: 1830111840}
   equationDropdown: {fileID: 551980883}
-  Width: 128
-  Depth: 128
+  Width: 256
+  Depth: 256
   NoiseHeightMultiplier: 100
   TerrainMaterial: {fileID: 2100000, guid: efe5727227351d34fb6fd7600aa11b63, type: 2}
   Frequency: 1

@@ -171,9 +171,11 @@ public class TerrainGeneration : MonoBehaviour
         int vertexMultiplier = 4; // create quads to fit uv's to so we can use more than one uv (4 vertices to a quad)
 
         Mesh terrainMesh = new Mesh();
+        terrainMesh.indexFormat = IndexFormat.UInt32;
         List<Vector3> vert = new List<Vector3>(width * depth * vertexMultiplier);
         List<int> indices = new List<int>(width * depth * 6);
         List<Vector2> uvs = new List<Vector2>(width * depth);
+
         for (int x = 0; x < width; x++)
         {
             for (int z = 0; z < depth; z++)
