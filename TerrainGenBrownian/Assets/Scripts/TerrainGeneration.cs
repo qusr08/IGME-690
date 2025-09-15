@@ -1,10 +1,11 @@
 using System.Collections.Generic;
-using Unity.Collections;
-using UnityEngine;
-using Unity.Mathematics;
-using UnityEngine.Rendering;
 using TMPro;
+using Unity.Collections;
+using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
+using static UnityEngine.UI.GridLayoutGroup;
 
 public class TerrainGeneration : MonoBehaviour
 {
@@ -192,6 +193,15 @@ public class TerrainGeneration : MonoBehaviour
                 float useAltXPlusY = EvaluateMapFunctionAt(x + 1, z, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z)] * NoiseHeightMultiplier;
                 float useAltZPlusY = EvaluateMapFunctionAt(x, z + 1, width, depth) + terrainHeightMap[(x) * (depth) + (z + 1)] * NoiseHeightMultiplier;
                 float useAltXAndZPlusY = EvaluateMapFunctionAt(x + 1, z + 1, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z + 1)] * NoiseHeightMultiplier;
+
+                float maxY = Mathf.Max(y, useAltXPlusY, useAltZPlusY, useAltXAndZPlusY);
+                float minY = Mathf.Min(y, useAltXPlusY, useAltZPlusY, useAltXAndZPlusY);
+                float heightDifference = (maxY - minY);
+
+                if (heightDifference > 1)
+                {
+                    continue;
+                }
 
                 vert.Add(new float3(x, y, z));
                 vert.Add(new float3(x, useAltZPlusY, z + 1));
