@@ -13,7 +13,7 @@ public class CreateTextureAtlasEditor : Editor
     {
         if (GUILayout.Button("Update Atlas Texture"))
         {
-            TextureAtlas.instance.CreateAtlasComponentData(directoryName, outputFileName);
+            TextureAtlas.Instance.CreateAtlasComponentData(directoryName, outputFileName);
             Debug.Log("Updated atlas texture.");
         }
     }
