@@ -14,12 +14,17 @@ public class TerrainGeneration : MonoBehaviour
 	[SerializeField] private TextMeshProUGUI bText;
 	[SerializeField] private Slider bSlider;
 	[SerializeField] private TMP_Dropdown equationDropdown;
+	[SerializeField] private Camera mainCamera;
 	[Header("Terrain Variables")]
 	[SerializeField] private int terrainWidth;
 	[SerializeField] private int terrainDepth;
 	[SerializeField] private int noiseHeightMultiplier;
-	[SerializeField] private Material terrainMaterial;
-	[Header("Perlin Noise Variables")]
+    [SerializeField] private Material terrainMaterial;
+    [Header("Environment Variables")]
+	[SerializeField] private GameObject treePrefab;
+	[SerializeField] private float maxTreeCount;
+    [SerializeField, Range(0f, 1f)] private float treeSpawnPercentage;
+    [Header("Perlin Noise Variables")]
 	[SerializeField] private float frequency = 1.0f;
 	[SerializeField] private float amplitude = 0.5f;
 	[SerializeField] private float lacunarity = 2.0f;
@@ -31,9 +36,12 @@ public class TerrainGeneration : MonoBehaviour
 	private GameObject terrainObject;
 	private MeshFilter terrainMeshFilter;
 	private MeshRenderer terrainMeshRenderer;
-	private NoiseAlgorithm terrainNoise;
 	private NativeArray<float> terrainHeightMap;
+	private float[] terrainFullHeightMap;
 	private List<MapFunction> mapFunctions;
+
+	private List<GameObject> treeObjects;
+	private List<Vector2Int> treePositions;
 
 	public float A
 	{
@@ -43,8 +51,8 @@ public class TerrainGeneration : MonoBehaviour
 			_a = value;
 			Vector2 aRange = mapFunctions[equationDropdown.value].ARange;
 			aText.text = $"<b>A</b> = {_a:0.0000} [{aRange.x} to {aRange.y}]";
-			UpdateTerrainMesh( );
-		}
+			UpdateTerrainMesh();
+        }
 	}
 	private float _a;
 
@@ -56,65 +64,33 @@ public class TerrainGeneration : MonoBehaviour
 			_b = value;
 			Vector2 bRange = mapFunctions[equationDropdown.value].BRange;
 			bText.text = $"<b>B</b> = {_b:0.0000} [{bRange.x} to {bRange.y}]";
-			UpdateTerrainMesh( );
-		}
+			UpdateTerrainMesh();
+        }
 	}
 	private float _b;
 
-	// Code to get rid of fog from: https://forum.unity.com/threads/how-do-i-turn-off-fog-on-a-specific-camera-using-urp.1373826/
-	// Unity calls this method automatically when it enables this component
-	private void OnEnable ( )
-	{
-		// Add WriteLogMessage as a delegate of the RenderPipelineManager.beginCameraRendering event
-		RenderPipelineManager.beginCameraRendering += BeginRender;
-		RenderPipelineManager.endCameraRendering += EndRender;
-	}
-
-	// Unity calls this method automatically when it disables this component
-	private void OnDisable ( )
-	{
-		// Remove WriteLogMessage as a delegate of the  RenderPipelineManager.beginCameraRendering event
-		RenderPipelineManager.beginCameraRendering -= BeginRender;
-		RenderPipelineManager.endCameraRendering -= EndRender;
-	}
-
-	// When this method is a delegate of RenderPipeline.beginCameraRendering event, Unity calls this method every time it raises the beginCameraRendering event
-	private void BeginRender (ScriptableRenderContext context, Camera camera)
-	{
-		if (camera.name == "Main Camera No Fog")
-		{
-			//Debug.Log("Turn fog off");
-			RenderSettings.fog = false;
-		}
-
-	}
-
-	private void EndRender (ScriptableRenderContext context, Camera camera)
-	{
-		if (camera.name == "Main Camera No Fog")
-		{
-			//Debug.Log("Turn fog on");
-			RenderSettings.fog = true;
-		}
-	}
-
 	void Start ( )
 	{
-		// Create a height map using perlin noise and fractal brownian motion
-		terrainNoise = new NoiseAlgorithm( );
+        // Create a height map using perlin noise and fractal brownian motion
+        NoiseAlgorithm terrainNoise = new NoiseAlgorithm( );
 		terrainNoise.InitializeNoise(terrainWidth + 1, terrainDepth + 1, UnityEngine.Random.Range(int.MinValue, int.MaxValue));
 		terrainNoise.InitializePerlinNoise(frequency, amplitude, octaves, lacunarity, gain, scale, normalizeBias);
 		terrainHeightMap = new NativeArray<float>((terrainWidth + 1) * (terrainDepth + 1), Allocator.Persistent);
-		terrainNoise.setNoise(terrainHeightMap, 0, 0);
+		terrainFullHeightMap = new float[(terrainWidth + 1) * (terrainDepth + 1)];
+        terrainNoise.setNoise(terrainHeightMap, 0, 0);
 		NoiseAlgorithm.OnExit( );
 
 		// Create the mesh and set it to the terrain variable
-		terrainObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-		terrainObject.transform.position = new Vector3(0, 0, 0);
-		terrainMeshRenderer = terrainObject.GetComponent<MeshRenderer>( );
+		terrainObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        terrainObject.transform.position = new Vector3(-terrainWidth / 2f, -noiseHeightMultiplier / 2f, -terrainDepth / 2f);
 		terrainMeshFilter = terrainObject.GetComponent<MeshFilter>( );
+        terrainMeshRenderer = terrainObject.GetComponent<MeshRenderer>();
+        terrainMeshRenderer.material = terrainMaterial;
 
-		mapFunctions = new List<MapFunction>( )
+		treeObjects = new List<GameObject>();
+        treePositions = new List<Vector2Int>();
+
+        mapFunctions = new List<MapFunction>( )
 		{
 			new MapFunction("xcos(<b>A</b>x)sin(<b>B</b>z)",
 				new Vector2(0f, 0.2f), new Vector2(0f, 0.2f),
@@ -148,16 +124,11 @@ public class TerrainGeneration : MonoBehaviour
 		bSlider.onValueChanged.AddListener((v) => { B = v; });
 		equationDropdown.onValueChanged.AddListener(SetCurrentMapFunction);
 
+		// Set the default map function and update the terrain mesh
 		SetCurrentMapFunction(0);
-	}
 
-	public void UpdateTerrainMesh ( )
-	{
-		// Update the shape of the terrain mesh
-		terrainMeshFilter.mesh = GenerateTerrainMesh( );
-
-		// Update the material of the terrain mesh
-		terrainMeshRenderer.material = terrainMaterial;
+		// Set the main camera position to be above the terrain in the center of the mesh
+		mainCamera.transform.position = new Vector3(0, terrainFullHeightMap[(terrainWidth / 2) * (terrainDepth + 1) + (terrainDepth / 2)] + 20, 0);
 	}
 
 	public Mesh GenerateTerrainMesh ( )
@@ -189,8 +160,10 @@ public class TerrainGeneration : MonoBehaviour
 				float useAltXPlusY = EvaluateMapFunctionAt(x + 1, z, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z)] * noiseHeightMultiplier;
 				float useAltZPlusY = EvaluateMapFunctionAt(x, z + 1, width, depth) + terrainHeightMap[(x) * (depth) + (z + 1)] * noiseHeightMultiplier;
 				float useAltXAndZPlusY = EvaluateMapFunctionAt(x + 1, z + 1, width, depth) + terrainHeightMap[(x + 1) * (depth) + (z + 1)] * noiseHeightMultiplier;
+				terrainFullHeightMap[(x) * (depth) + (z)] = y;
+				terrainFullHeightMap[(x + 1) * (depth) + (z + 1)] = useAltXAndZPlusY;
 
-				vert.Add(new float3(x, y, z));
+                vert.Add(new float3(x, y, z));
 				vert.Add(new float3(x, useAltZPlusY, z + 1));
 				vert.Add(new float3(x + 1, useAltXPlusY, z));
 				vert.Add(new float3(x + 1, useAltXAndZPlusY, z + 1));
@@ -225,6 +198,12 @@ public class TerrainGeneration : MonoBehaviour
 					if (heightDifference < 1.5)
 					{
 						uvRect = GetTextureUVRect(0, 2); // Grass
+						
+						// See if a tree should spawn on this grass block
+						if (treePositions.Count < maxTreeCount && UnityEngine.Random.Range(0f, 1f) < treeSpawnPercentage)
+						{
+							treePositions.Add(new Vector2Int(x, z));
+						}
 					}
 					else if (heightDifference < 4)
 					{
@@ -256,6 +235,29 @@ public class TerrainGeneration : MonoBehaviour
 
 		return terrainMesh;
 	}
+
+	private void UpdateTerrainMesh ()
+	{
+		// Remove all tree objects
+		for (int i = treeObjects.Count - 1; i >= 0; i--)
+		{
+			Destroy(treeObjects[i]);
+		}
+		treeObjects.Clear();
+		treePositions.Clear();
+		
+		Mesh terrainMesh = GenerateTerrainMesh();
+		terrainMeshFilter.sharedMesh = terrainMesh;
+
+        // Spawn trees into the scene
+        foreach (Vector2Int treePosition in treePositions)
+        {
+			float treeY = terrainFullHeightMap[(treePosition.x) * (terrainDepth + 1) + (treePosition.y)];
+			GameObject treeObject = Instantiate(treePrefab, new Vector3(treePosition.x, treeY - 4.5f, treePosition.y), Quaternion.identity);
+			treeObject.transform.SetParent(terrainObject.transform, false);
+			treeObjects.Add(treeObject);
+        }
+    }
 
 	private float EvaluateMapFunctionAt (float x, float z, float width, float depth)
 	{
