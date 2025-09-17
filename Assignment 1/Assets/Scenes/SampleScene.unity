@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0.65080994, g: 0.666729, b: 0.7075472, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0.0075
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.3813261, g: 0.40197787, b: 0.45641106, a: 1}
@@ -1408,8 +1408,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 175, y: -130}
-  m_SizeDelta: {x: 350, y: 0}
+  m_AnchoredPosition: {x: 150, y: -130}
+  m_SizeDelta: {x: 300, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1071655796
 MonoBehaviour:
@@ -1663,7 +1663,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 23.4
+  m_fontSize: 19.85
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1751,6 +1751,52 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1198875151
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1198875153}
+  - component: {fileID: 1198875152}
+  m_Layer: 0
+  m_Name: Tree Object Pool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1198875152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198875151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21ccc05a86408824da168e5b355693d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  treePrefab: {fileID: 8998800175362945709, guid: 5a4e11e70b9b1da4aabb6af4c0c849b6, type: 3}
+  _maxTreeObjects: 50
+--- !u!4 &1198875153
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198875151}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1233363912
 GameObject:
   m_ObjectHideFlags: 0
@@ -2661,7 +2707,7 @@ Transform:
   m_GameObject: {fileID: 1687258581}
   serializedVersion: 2
   m_LocalRotation: {x: 0.030153697, y: 0.96984637, z: -0.17101005, w: 0.17101015}
-  m_LocalPosition: {x: 0, y: 5, z: 15}
+  m_LocalPosition: {x: 0, y: 50, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3172,14 +3218,12 @@ MonoBehaviour:
   bText: {fileID: 1554589652}
   bSlider: {fileID: 1830111840}
   equationDropdown: {fileID: 551980883}
-  mainCamera: {fileID: 1687258584}
   terrainWidth: 512
   terrainDepth: 512
   noiseHeightMultiplier: 100
   terrainMaterial: {fileID: 2100000, guid: e1d103980291d73459a2278073581f6a, type: 2}
-  treePrefab: {fileID: 447400927865954301, guid: 5a4e11e70b9b1da4aabb6af4c0c849b6, type: 3}
-  maxTreeCount: 50
-  treeSpawnPercentage: 0.001
+  treeSpawnPercentage: 0.02
+  treeObjectPool: {fileID: 1198875152}
   frequency: 1
   amplitude: 0.5
   lacunarity: 2
@@ -3211,7 +3255,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2092641474}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e3ed27cd5668ef244b92bd3383c187ef, type: 3}
+  m_Script: {fileID: 11500000, guid: 7f77b93813ba4d948aac33a19db58c75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2138677391
@@ -3345,3 +3389,4 @@ SceneRoots:
   - {fileID: 2092641476}
   - {fileID: 565792034}
   - {fileID: 1233363915}
+  - {fileID: 1198875153}

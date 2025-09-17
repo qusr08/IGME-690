@@ -95,7 +95,6 @@ public class TextureAtlas
 			}
 		}
 
-		atlas.alphaIsTransparency = true;
 		atlas.Apply( );
 
 		// Write the atlas out to a file

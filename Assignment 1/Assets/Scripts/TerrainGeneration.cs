@@ -14,16 +14,13 @@ public class TerrainGeneration : MonoBehaviour
 	[SerializeField] private TextMeshProUGUI bText;
 	[SerializeField] private Slider bSlider;
 	[SerializeField] private TMP_Dropdown equationDropdown;
-	[SerializeField] private Camera mainCamera;
-	[Header("Terrain Variables")]
+    [Header("Terrain Variables")]
 	[SerializeField] private int terrainWidth;
 	[SerializeField] private int terrainDepth;
 	[SerializeField] private int noiseHeightMultiplier;
     [SerializeField] private Material terrainMaterial;
-    [Header("Environment Variables")]
-	[SerializeField] private GameObject treePrefab;
-	[SerializeField] private float maxTreeCount;
     [SerializeField, Range(0f, 1f)] private float treeSpawnPercentage;
+    [SerializeField] private TreeObjectPool treeObjectPool;
     [Header("Perlin Noise Variables")]
 	[SerializeField] private float frequency = 1.0f;
 	[SerializeField] private float amplitude = 0.5f;
@@ -40,7 +37,6 @@ public class TerrainGeneration : MonoBehaviour
 	private float[] terrainFullHeightMap;
 	private List<MapFunction> mapFunctions;
 
-	private List<GameObject> treeObjects;
 	private List<Vector2Int> treePositions;
 
 	public float A
@@ -69,7 +65,7 @@ public class TerrainGeneration : MonoBehaviour
 	}
 	private float _b;
 
-	void Start ( )
+	private void Start ( )
 	{
         // Create a height map using perlin noise and fractal brownian motion
         NoiseAlgorithm terrainNoise = new NoiseAlgorithm( );
@@ -83,11 +79,11 @@ public class TerrainGeneration : MonoBehaviour
 		// Create the mesh and set it to the terrain variable
 		terrainObject = GameObject.CreatePrimitive(PrimitiveType.Quad);
         terrainObject.transform.position = new Vector3(-terrainWidth / 2f, -noiseHeightMultiplier / 2f, -terrainDepth / 2f);
-		terrainMeshFilter = terrainObject.GetComponent<MeshFilter>( );
+		treeObjectPool.transform.position = new Vector3(-terrainWidth / 2f + 1, -noiseHeightMultiplier / 2f, -terrainDepth / 2f);
+        terrainMeshFilter = terrainObject.GetComponent<MeshFilter>( );
         terrainMeshRenderer = terrainObject.GetComponent<MeshRenderer>();
         terrainMeshRenderer.material = terrainMaterial;
 
-		treeObjects = new List<GameObject>();
         treePositions = new List<Vector2Int>();
 
         mapFunctions = new List<MapFunction>( )
@@ -126,9 +122,6 @@ public class TerrainGeneration : MonoBehaviour
 
 		// Set the default map function and update the terrain mesh
 		SetCurrentMapFunction(0);
-
-		// Set the main camera position to be above the terrain in the center of the mesh
-		mainCamera.transform.position = new Vector3(0, terrainFullHeightMap[(terrainWidth / 2) * (terrainDepth + 1) + (terrainDepth / 2)] + 20, 0);
 	}
 
 	public Mesh GenerateTerrainMesh ( )
@@ -144,7 +137,9 @@ public class TerrainGeneration : MonoBehaviour
 		List<int> indices = new List<int>(width * depth * 6);
 		List<Vector2> uvs = new List<Vector2>(width * depth);
 
-		for (int x = 0; x < width; x++)
+        treePositions.Clear();
+
+        for (int x = 0; x < width; x++)
 		{
 			for (int z = 0; z < depth; z++)
 			{
@@ -185,11 +180,11 @@ public class TerrainGeneration : MonoBehaviour
 
 				// UV positioning is from the bottom-left of the texture atlas
 				Rect uvRect;
-				if (maxY > 100)
+				if (maxY > 200)
 				{
 					uvRect = GetTextureUVRect(2, 3); // Snow
 				}
-				else if (maxY < -40)
+				else if (maxY < -50)
 				{
 					uvRect = GetTextureUVRect(3, 0); // Deepslate
 				}
@@ -200,7 +195,7 @@ public class TerrainGeneration : MonoBehaviour
 						uvRect = GetTextureUVRect(0, 2); // Grass
 						
 						// See if a tree should spawn on this grass block
-						if (treePositions.Count < maxTreeCount && UnityEngine.Random.Range(0f, 1f) < treeSpawnPercentage)
+						if (UnityEngine.Random.Range(0f, 1f) < treeSpawnPercentage)
 						{
 							treePositions.Add(new Vector2Int(x, z));
 						}
@@ -238,24 +233,21 @@ public class TerrainGeneration : MonoBehaviour
 
 	private void UpdateTerrainMesh ()
 	{
-		// Remove all tree objects
-		for (int i = treeObjects.Count - 1; i >= 0; i--)
-		{
-			Destroy(treeObjects[i]);
-		}
-		treeObjects.Clear();
-		treePositions.Clear();
-		
-		Mesh terrainMesh = GenerateTerrainMesh();
-		terrainMeshFilter.sharedMesh = terrainMesh;
+		treeObjectPool.DisableAllTrees();
+        terrainMeshFilter.sharedMesh = GenerateTerrainMesh();
 
-        // Spawn trees into the scene
-        foreach (Vector2Int treePosition in treePositions)
-        {
-			float treeY = terrainFullHeightMap[(treePosition.x) * (terrainDepth + 1) + (treePosition.y)];
-			GameObject treeObject = Instantiate(treePrefab, new Vector3(treePosition.x, treeY - 4.5f, treePosition.y), Quaternion.identity);
-			treeObject.transform.SetParent(terrainObject.transform, false);
-			treeObjects.Add(treeObject);
+		for (int i = 0; i < treeObjectPool.MaxTreeObjects; i++)
+		{
+			if (treePositions.Count == 0)
+			{
+				break;
+			}
+
+			// Get a random tree position and spawn a tree there
+			int treeIndex = UnityEngine.Random.Range(0, treePositions.Count);
+            Vector2Int treePosition = treePositions[treeIndex];
+            treeObjectPool.PlaceTreeAt(new Vector3(treePosition.x, terrainFullHeightMap[(treePosition.x) * (terrainDepth + 1) + (treePosition.y)] - 1.5f, treePosition.y));
+			treePositions.RemoveAt(treeIndex);
         }
     }
 
