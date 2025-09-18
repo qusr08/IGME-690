@@ -1,0 +1,160 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+//RWTexture2D<float4> Result;
+float frequency;
+float amplitude;
+int octaves;
+float lacunarity;
+float gain;
+float scale;
+float xOffset;
+float yOffset;
+float zOffset;
+int cx;
+int cy;
+int permSize;
+int dimensions;
+int maxWidth;
+StructuredBuffer<int> PermutationArray;
+StructuredBuffer<float> RandomArray;
+RWStructuredBuffer<float> PerlinNoise;
+
+// a utility function in Perlin's paper 
+// gives the cubic approximation of the component dropoff
+float s_curve(float t)
+{
+    return (t * t * (3.0f - 2.0f * t));
+
+}
+
+float dotProduct(float q1, float q2, float q3, float r1, float r2, float r3)
+{
+    float3 lhs = float3(q1, q2, q3);
+    float3 rhs = float3(r1, r2, r3);
+    return ((lhs.x * rhs.x) + (lhs.y *  rhs.y) + (lhs.z *  rhs.z));
+}
+
+// utility function for a different dropoff function that can be tried
+float fade(float t)
+{
+    return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+}
+
+// utility function that interpolates data from different points on the surface
+float lerpP(float t, float a, float b)
+{
+    return a + t * (b - a);
+}
+
+ float pnoise(float x, float y, float z)
+{
+        int bx0, bx1, by0, by1, bz0, bz1, b00, b10, b01, b11;
+        float rx0, rx1, ry0, ry1, rz0, rz1, sx, sy, sz, a, b, c, d, t, u, v;
+        int i, j;
+    
+        t = x + 10000.0f;
+        bx0 = ((int)t) & (permSize - 1);
+        bx1 = (bx0 + 1) & (permSize - 1);
+        rx0 = t - (int)t;
+        rx1 = rx0 - 1;
+
+        t = y + 10000.0f;
+        by0 = ((int)t) & (permSize - 1);
+        by1 = (by0 + 1) & (permSize - 1);
+        ry0 = t - (int)t;
+        ry1 = ry0 - 1;
+
+        t = z + 10000.0f;
+        bz0 = ((int)t) & (permSize - 1);
+        bz1 = (bz0 + 1) & (permSize - 1);
+        rz0 = t - (int)t;
+        rz1 = rz0 - 1;
+       
+        i = PermutationArray[bx0];
+        j = PermutationArray[bx1];
+
+        b00 = PermutationArray[i + by0];
+        b10 = PermutationArray[j + by0];
+        b01 = PermutationArray[i + by1];
+        b11 = PermutationArray[j + by1];
+
+        sx = s_curve(rx0);
+        sy = s_curve(ry0);
+        sz = s_curve(rz0);
+
+        // This uses a different dropoff function that's supposed to work better.
+        // uncomment to see the difference
+        //sx = fade(rx0);  
+        //sy = fade(ry0); 
+        //sz = fade(rz0);
+
+        int row = (b00 + bz0) * dimensions;
+        u = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx0, ry0, rz0);
+        row = (b10 + bz0) * dimensions;
+        v = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx1, ry0, rz0);
+        a = lerpP(sx, u, v);
+
+        row = (b01 + bz0) * dimensions;
+        u = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx0, ry1, rz0);
+        row = (b11 + bz0) * dimensions;
+        v = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx1, ry1, rz0);
+        b = lerpP(sx, u, v);
+
+        c = lerpP(sy, a, b);
+
+        row = (b00 + bz1) * dimensions;
+        u = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx0, ry0, rz1);
+        row = (b10 + bz1) * dimensions;
+        v = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx1, ry0, rz1);
+        a = lerpP(sx, u, v);
+
+        row = (b01 + bz1) * dimensions;
+        u = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx0, ry1, rz1);
+        row = (b11 + bz1) * dimensions;
+        v = dotProduct(RandomArray[row + 0], RandomArray[row + 1], RandomArray[row + 2],
+            rx1, ry1, rz1);
+        b = lerpP(sx, u, v);
+
+        d = lerpP(sy, a, b);
+
+        return (1.5f * lerpP(sz, c, d));
+    }
+
+float height2d(float x, float y, int octaves,
+            float lacunarity, float gain)
+{
+    float freq = frequency, amp = amplitude;
+    float sum = 0.0f;
+    for (int i = 0; i < octaves; i++)
+    {
+        sum += pnoise(x * freq, y * freq, 0) * amp;
+        freq *= lacunarity; // amount we increase freq by for each loop through
+        amp *= gain;
+    }
+
+    return sum;
+}
+
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    // since we want the noise to be consistent based on the indices
+    // of the map, we scale and offset them
+    int x = id.x;
+    int y = id.y;
+    float result = height2d((cx + x) * scale + xOffset, (cy + y) * scale + yOffset, octaves, lacunarity, gain) +zOffset;
+    PerlinNoise[x * maxWidth + y] = result;
+    //Result[id.xy] = float4(result, result, result, 1.0);
+}
