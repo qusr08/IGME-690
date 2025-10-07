@@ -12,6 +12,16 @@ public class DungeonRoomLibrary : MonoBehaviour
     [SerializeField] private List<DungeonRoom> _dungeonRooms;
 
     public List<DungeonRoom> DungeonRooms => _dungeonRooms;
+    public List<int> DungeonRoomIndices { get; private set; }
+
+    private void Awake()
+    {
+        DungeonRoomIndices = new List<int>();
+        for (int i = 0; i < DungeonRooms.Count; i++)
+        {
+            DungeonRoomIndices.Add(i);
+        }
+    }
 }
 
 [Serializable]
