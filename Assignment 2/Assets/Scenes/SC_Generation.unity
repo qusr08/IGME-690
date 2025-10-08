@@ -507,7 +507,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   size: {x: 20, y: 1, z: 20}
-  generationSpeed: 0.02
+  generationSpeed: 0.005
 --- !u!114 &349818151
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -522,7 +522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dungeonRooms:
   - Prefab: {fileID: 802769632110312128, guid: 76599ec856f6d944c9aaba7dafeaddd2, type: 3}
-    SpawnChance: 3
+    SpawnChance: 5
     Orientation:
       PositiveX: 2
       NegativeX: 2
@@ -532,7 +532,7 @@ MonoBehaviour:
       NegativeZ: 1
       Rotation: 0
   - Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
-    SpawnChance: 1
+    SpawnChance: 5
     Orientation:
       PositiveX: 2
       NegativeX: 1
@@ -542,7 +542,7 @@ MonoBehaviour:
       NegativeZ: 2
       Rotation: 0
   - Prefab: {fileID: 2136721083392936744, guid: 4fa241f9da41e944799b61cebf61baaf, type: 3}
-    SpawnChance: 2
+    SpawnChance: 1
     Orientation:
       PositiveX: 2
       NegativeX: 1
@@ -552,7 +552,7 @@ MonoBehaviour:
       NegativeZ: 1
       Rotation: 0
   - Prefab: {fileID: 2140376338157009751, guid: 7f02cbf28fb835043b9c7c77ec196b75, type: 3}
-    SpawnChance: 5
+    SpawnChance: 1
     Orientation:
       PositiveX: 1
       NegativeX: 1

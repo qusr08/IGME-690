@@ -49,7 +49,7 @@ public class DungeonGenerator : MonoBehaviour
         }
 
         // Update all of the possible rooms of the map before it starts to generate
-        UpdateEntropyFromOrigin(Vector3Int.zero);
+        UpdateEntropyFromOrigin(new Vector3Int(size.x / 2, 0, size.z / 2), forceEntireMap: true);
 
         int collapseCount = 0;
         while (collapseCount < size.x * size.z)
@@ -141,7 +141,7 @@ public class DungeonGenerator : MonoBehaviour
         return lowestEntropyPositions;
     }
 
-    private void UpdateEntropyFromOrigin(Vector3Int origin)
+    private void UpdateEntropyFromOrigin(Vector3Int origin, bool forceEntireMap = false)
     {
         // Get a list of the current positions to check
         List<Vector3Int> updatePositions = new List<Vector3Int>() {
@@ -182,7 +182,7 @@ public class DungeonGenerator : MonoBehaviour
             int removedRooms = map[currentPosition.x, currentPosition.z].RemoveUnfitRooms(requirements);
 
             // If some possible rooms were removed, then add the surrounding positions to the update list
-            if (removedRooms > 0)
+            if (forceEntireMap || (!forceEntireMap && removedRooms > 0))
             {
                 updatePositions.Add(currentPosition + Vector3Int.right);
                 updatePositions.Add(currentPosition + Vector3Int.left);
