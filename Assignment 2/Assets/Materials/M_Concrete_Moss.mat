@@ -34,7 +34,7 @@ Material:
   - TransparentBackface
   - RayTracingPrepass
   - MOTIONVECTORS
-  m_LockedProperties: _SmoothnessRemapMax _SmoothnessRemapMin
+  m_LockedProperties: _CoatMask _CoatMaskMap _SmoothnessRemapMax _SmoothnessRemapMin
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -488,7 +488,7 @@ Material:
     - _NormalMapSpace1: 0
     - _NormalMapSpace2: 0
     - _NormalMapSpace3: 0
-    - _NormalScale: 0
+    - _NormalScale: 1
     - _NormalScale0: 1
     - _NormalScale1: 1
     - _NormalScale2: 1
