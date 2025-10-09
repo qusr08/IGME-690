@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
+  m_Name: Room Corner
+  m_EditorClassIdentifier: 
+  Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
+  SpawnChance: 1
+  Orientation:
+    PositiveX: 2
+    NegativeX: 1
+    PositiveY: 2
+    NegativeY: 2
+    PositiveZ: 1
+    NegativeZ: 2
+    Rotation: 0

@@ -1,8 +1,9 @@
 using System;
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Dungeon Room", menuName = "Dungeon Room")]
 [Serializable]
-public class DungeonRoom
+public class DungeonRoom : ScriptableObject
 {
     public GameObject Prefab;
     public float SpawnChance;

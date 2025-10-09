@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class DungeonRoomLibrary : MonoBehaviour
 {
-    [SerializeField] private List<DungeonRoom> _dungeonRooms;
+    [SerializeField] private SerializableDictionary<DungeonRoomType, DungeonRoom> _dungeonRooms;
     [SerializeField, Min(0)] private int _roomSize;
 
-    public List<DungeonRoom> DungeonRooms => _dungeonRooms;
+    public Dictionary<DungeonRoomType, DungeonRoom> DungeonRooms => _dungeonRooms;
     public int RoomSize => _roomSize;
     public List<DungeonRoom> AllDungeonRooms { get; private set; }
 
@@ -15,12 +15,12 @@ public class DungeonRoomLibrary : MonoBehaviour
         AllDungeonRooms = new List<DungeonRoom>();
 
         // Get a list of all dungeon rooms in every possible rotation
-        for(int i = 0; i < DungeonRooms.Count; i++)
+        for (int i = 0; i < DungeonRooms.Count; i++)
         {
-            RoomOrientation orientation = DungeonRooms[i].Orientation;
+            RoomOrientation orientation = DungeonRooms[(DungeonRoomType)i].Orientation;
             for (int j = 0; j < 4; j++)
             {
-                AllDungeonRooms.Add(new DungeonRoom(DungeonRooms[i], orientation.RotateClockwise()));
+                AllDungeonRooms.Add(new DungeonRoom(DungeonRooms[(DungeonRoomType)i], orientation.RotateClockwise()));
             }
         }
     }

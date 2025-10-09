@@ -5,14 +5,14 @@ public class DungeonEntry
 {
     public List<DungeonRoom> PossibleRooms { get; private set; }
     public DungeonRoom CollapsedRoom { get; private set; }
-    public Vector3Int MapPosition { get; private set; }
+    public Vector2Int MapPosition { get; private set; }
     public bool IsCollapsed { get; private set; }
 
-    public DungeonEntry(int x, int y, int z)
+    public DungeonEntry(int x, int y)
     {
         PossibleRooms = new List<DungeonRoom>();
         CollapsedRoom = new DungeonRoom(null, 0, new RoomOrientation());
-        MapPosition = new Vector3Int(x, y, z);
+        MapPosition = new Vector2Int(x, y);
         IsCollapsed = false;
     }
 
@@ -37,6 +37,18 @@ public class DungeonEntry
         }
 
         return removedRooms;
+    }
+
+    public void ForceCollapseRoom(DungeonRoom room)
+    {
+        if (IsCollapsed)
+        {
+            return;
+        }
+
+        CollapsedRoom = room;
+        IsCollapsed = true;
+        PossibleRooms.Clear();
     }
 
     public DungeonRoom CollapsePossibleRooms()

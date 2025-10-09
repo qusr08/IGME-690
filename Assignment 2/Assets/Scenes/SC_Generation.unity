@@ -506,7 +506,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84b9b2bbd8a4a254ea06627086f21291, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: {x: 20, y: 1, z: 20}
+  size: {x: 20, y: 20}
+  roomMaxSize: {x: 5, y: 5}
+  roomCount: 2
   generationSpeed: 0.005
 --- !u!114 &349818151
 MonoBehaviour:
@@ -521,46 +523,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dungeonRooms:
-  - Prefab: {fileID: 802769632110312128, guid: 76599ec856f6d944c9aaba7dafeaddd2, type: 3}
-    SpawnChance: 5
-    Orientation:
-      PositiveX: 2
-      NegativeX: 2
-      PositiveY: 2
-      NegativeY: 2
-      PositiveZ: 1
-      NegativeZ: 1
-      Rotation: 0
-  - Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
-    SpawnChance: 5
-    Orientation:
-      PositiveX: 2
-      NegativeX: 1
-      PositiveY: 2
-      NegativeY: 2
-      PositiveZ: 1
-      NegativeZ: 2
-      Rotation: 0
-  - Prefab: {fileID: 2136721083392936744, guid: 4fa241f9da41e944799b61cebf61baaf, type: 3}
-    SpawnChance: 1
-    Orientation:
-      PositiveX: 2
-      NegativeX: 1
-      PositiveY: 2
-      NegativeY: 2
-      PositiveZ: 1
-      NegativeZ: 1
-      Rotation: 0
-  - Prefab: {fileID: 2140376338157009751, guid: 7f02cbf28fb835043b9c7c77ec196b75, type: 3}
-    SpawnChance: 1
-    Orientation:
-      PositiveX: 1
-      NegativeX: 1
-      PositiveY: 2
-      NegativeY: 2
-      PositiveZ: 1
-      NegativeZ: 1
-      Rotation: 0
+  - {fileID: 11400000, guid: d0ae64ad23368a04782c435064e48351, type: 2}
+  - {fileID: 11400000, guid: c407c6da3b985aa4b9072b08ef055d7c, type: 2}
+  - {fileID: 11400000, guid: ad10ff0238a66ee48884799fa7288821, type: 2}
+  - {fileID: 11400000, guid: b42a276c87b03a34fa968703dc024323, type: 2}
+  - {fileID: 11400000, guid: d0029cc6c7203f94aa9e5300adfd93ac, type: 2}
   _roomSize: 10
 --- !u!1 &432432459
 GameObject:
