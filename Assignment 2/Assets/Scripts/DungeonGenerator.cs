@@ -15,6 +15,7 @@ public class DungeonGenerator : MonoBehaviour
     [SerializeField] private float propSpawnChance;
     [Space]
     [SerializeField] private List<GameObject> propPrefabs;
+    [SerializeField] private Transform cameraTransform;
     [Space]
     [SerializeField] private Slider dungeonWidthSlider;
     [SerializeField] private Slider dungeonHeightSlider;
@@ -90,6 +91,11 @@ public class DungeonGenerator : MonoBehaviour
         areaMaxSize = (int) areaMaxSizeSlider.value;
         areaCount = (int) areaCountSlider.value;
         propSpawnChance = propSpawnChanceSlider.value;
+
+        // Set the position of this generator and the camera based on the size of the dungeon
+        transform.position = new Vector3(-dungeonWidth / 2f, 0f, -dungeonHeight / 2f) * roomLibrary.RoomSize;
+        cameraTransform.position = new Vector3(0f, dungeonWidth * 10f, dungeonHeight * -2f);
+        cameraTransform.LookAt(new Vector3(0f, 0f, dungeonHeight * -0.5f));
 
         StartCoroutine(GenerateMapCoroutine());
     }
@@ -433,7 +439,7 @@ public class DungeonGenerator : MonoBehaviour
             for (int y = 0; y < dungeonHeight; y++)
             {
                 // At the start, each room can be any possibility
-                DungeonEntry possibility = new DungeonEntry(this, x, y);
+                DungeonEntry possibility = new DungeonEntry(x, y);
                 possibility.PossibleRooms.AddRange(roomLibrary.AllDungeonRooms);
                 map[x, y] = possibility;
             }
@@ -544,7 +550,8 @@ public class DungeonGenerator : MonoBehaviour
     {
         Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(entry.MapPosition.x, 0f, entry.MapPosition.y);
         Quaternion spawnRotation = Quaternion.Euler(0, entry.CollapsedRoom.Orientation.Rotation * 90, 0);
-        entry.Object = Instantiate(entry.CollapsedRoom.Prefab, spawnPosition, spawnRotation, transform).GetComponent<DungeonRoomObject>();
+        entry.Object = Instantiate(entry.CollapsedRoom.Prefab, spawnPosition, spawnRotation).GetComponent<DungeonRoomObject>();
+        entry.Object.transform.SetParent(transform, false);
         entry.Object.Color = color;
 
         return entry.Object;
@@ -555,6 +562,7 @@ public class DungeonGenerator : MonoBehaviour
         GameObject propPrefab = propPrefabs[Random.Range(0, propPrefabs.Count)];
         Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(entry.MapPosition.x, 0f, entry.MapPosition.y);
         Quaternion spawnRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-        Instantiate(propPrefab, spawnPosition, spawnRotation, entry.Object.transform);
+        Transform propTransform = Instantiate(propPrefab, Vector3.zero, spawnRotation).transform;
+        propTransform.SetParent(entry.Object.transform, false);
     }
 }

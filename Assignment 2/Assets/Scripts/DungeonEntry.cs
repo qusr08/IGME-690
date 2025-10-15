@@ -9,12 +9,8 @@ public class DungeonEntry
     public bool IsCollapsed { get; private set; }
 	public DungeonRoomObject Object;
 
-    private DungeonGenerator dungeonGenerator;
-
-	public DungeonEntry(DungeonGenerator dungeonGenerator, int x, int y)
+	public DungeonEntry(int x, int y)
     {
-        this.dungeonGenerator = dungeonGenerator;
-
         PossibleRooms = new List<DungeonRoom>();
         CollapsedRoom = new DungeonRoom(null, 0, new RoomOrientation());
         MapPosition = new Vector2Int(x, y);
