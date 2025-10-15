@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
+  m_Name: SO_Cage
+  m_EditorClassIdentifier: 
+  _data:
+    Prefab: {fileID: 4052342717632362522, guid: a18e2dc6cf3d0bd4f8926d399d1cdc57, type: 3}
+    SpawnChance: 0
+    Orientation:
+      PositiveX: 2
+      NegativeX: 2
+      PositiveZ: 2
+      NegativeZ: 2

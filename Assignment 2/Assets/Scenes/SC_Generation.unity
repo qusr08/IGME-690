@@ -315,13 +315,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dungeonRooms:
-    m_keys: 0000000001000000020000000300000004000000
+    m_keys: 000000000100000002000000030000000400000005000000
     m_values:
     - {fileID: 11400000, guid: d0ae64ad23368a04782c435064e48351, type: 2}
     - {fileID: 11400000, guid: c407c6da3b985aa4b9072b08ef055d7c, type: 2}
     - {fileID: 11400000, guid: d0029cc6c7203f94aa9e5300adfd93ac, type: 2}
     - {fileID: 11400000, guid: ad10ff0238a66ee48884799fa7288821, type: 2}
     - {fileID: 11400000, guid: b42a276c87b03a34fa968703dc024323, type: 2}
+    - {fileID: 11400000, guid: a96c00b12085a6e4a802402964860798, type: 2}
   _roomSize: 10
 --- !u!1 &402764596
 GameObject:
