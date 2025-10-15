@@ -1,28 +1,62 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.EventSystems.EventTrigger;
+using UnityEngine.UI;
 
 public class DungeonGenerator : MonoBehaviour
 {
-    [SerializeField] private Vector2Int dungeonSize;
-    [SerializeField, Min(0f)] private float generationSpeed;
-    [Space]
-    [SerializeField, Range(3, 15)] private int areaMinSize;
-    [SerializeField, Range(3, 15)] private int areaMaxSize;
-    [SerializeField, Range(0f, 10f)] private int areaCount;
+    [SerializeField] private int dungeonWidth;
+    [SerializeField] private int dungeonHeight;
+    [SerializeField] private int areaMinSize;
+    [SerializeField] private int areaMaxSize;
+    [SerializeField] private int areaCount;
+    [SerializeField] private float propSpawnChance;
     [Space]
     [SerializeField] private List<GameObject> propPrefabs;
-    [SerializeField, Range(0f, 1f)] private float propSpawnChance;
+    [Space]
+    [SerializeField] private Slider dungeonWidthSlider;
+    [SerializeField] private Slider dungeonHeightSlider;
+    [SerializeField] private Slider generationSpeedSlider;
+    [SerializeField] private Slider areaMinSizeSlider;
+    [SerializeField] private Slider areaMaxSizeSlider;
+    [SerializeField] private Slider areaCountSlider;
+    [SerializeField] private Slider propSpawnChanceSlider;
+    [Space]
+    [SerializeField] private TextMeshProUGUI dungeonWidthText;
+    [SerializeField] private TextMeshProUGUI dungeonHeightText;
+    [SerializeField] private TextMeshProUGUI generationSpeedText;
+    [SerializeField] private TextMeshProUGUI areaMinSizeText;
+    [SerializeField] private TextMeshProUGUI areaMaxSizeText;
+    [SerializeField] private TextMeshProUGUI areaCountText;
+    [SerializeField] private TextMeshProUGUI propSpawnChanceText;
+    [SerializeField] private TextMeshProUGUI generationStepText;
 
     private DungeonRoomLibrary roomLibrary;
     private DungeonEntry[,] map;
 
+    public float GenerationSpeed => generationSpeedSlider.value;
+
     private void Awake()
     {
         roomLibrary = GetComponent<DungeonRoomLibrary>();
+
+        dungeonWidthSlider.onValueChanged.AddListener(value => { dungeonWidthText.text = $"Dungeon Width: {value}"; });
+        dungeonHeightSlider.onValueChanged.AddListener(value => { dungeonHeightText.text = $"Dungeon Height: {value}"; });
+        generationSpeedSlider.onValueChanged.AddListener(value => { generationSpeedText.text = $"Generation Delay: {value:0.00}s"; });
+        areaMinSizeSlider.onValueChanged.AddListener(value => { areaMinSizeText.text = $"Min Room Size: {value}"; });
+        areaMaxSizeSlider.onValueChanged.AddListener(value => { areaMaxSizeText.text = $"Max Room Size: {value}"; });
+        areaCountSlider.onValueChanged.AddListener(value => { areaCountText.text = $"Room Count: {value}"; });
+        propSpawnChanceSlider.onValueChanged.AddListener(value => { propSpawnChanceText.text = $"Prop Spawn Chance: {(value * 100):0.00}%"; });
+
+        dungeonWidthSlider.onValueChanged.Invoke(dungeonWidthSlider.value);
+        dungeonHeightSlider.onValueChanged.Invoke(dungeonHeightSlider.value);
+        generationSpeedSlider.onValueChanged.Invoke(generationSpeedSlider.value);
+        areaMinSizeSlider.onValueChanged.Invoke(areaMinSizeSlider.value);
+        areaMaxSizeSlider.onValueChanged.Invoke(areaMaxSizeSlider.value);
+        areaCountSlider.onValueChanged.Invoke(areaCountSlider.value);
+        propSpawnChanceSlider.onValueChanged.Invoke(propSpawnChanceSlider.value);
     }
 
     private void Start()
@@ -37,9 +71,9 @@ public class DungeonGenerator : MonoBehaviour
         // Destroy all rooms so they can be regenerated
         if (map != null)
         {
-            for (int x = 0; x < dungeonSize.x; x++)
+            for (int x = 0; x < dungeonWidth; x++)
             {
-                for (int y = 0; y < dungeonSize.y; y++)
+                for (int y = 0; y < dungeonHeight; y++)
                 {
                     if (map[x, y].Object != null)
                     {
@@ -48,6 +82,14 @@ public class DungeonGenerator : MonoBehaviour
                 }
             }
         }
+
+        // Update all variables based on UI
+        dungeonWidth = (int) dungeonWidthSlider.value;
+        dungeonHeight = (int) dungeonHeightSlider.value;
+        areaMinSize = (int) areaMinSizeSlider.value;
+        areaMaxSize = (int) areaMaxSizeSlider.value;
+        areaCount = (int) areaCountSlider.value;
+        propSpawnChance = propSpawnChanceSlider.value;
 
         StartCoroutine(GenerateMapCoroutine());
     }
@@ -58,22 +100,34 @@ public class DungeonGenerator : MonoBehaviour
         InitializeRoomPossibilities();
 
         // Before doing wave function collapse, spawn some starting rooms in the dungeon
+        generationStepText.text = "Step 1: Spawning Rooms...";
         yield return StartCoroutine(SpawnStartingAreas());
 
         // Update all of the possible rooms of the map before it starts to generate
         UpdateEntropyFromOrigin(Vector2Int.zero, forceEntireMap: true);
 
         // Use wave function collapse algorithm to create the rest of the dungeon
+        generationStepText.text = "Step 2: Collapsing Dungeon...";
         yield return StartCoroutine(CollapseDungeon());
 
         // Find the largest path through the dungeon and remove all of the rooms that are not part of it
+        generationStepText.text = "Step 3: Prune Unconnected Paths...";
         yield return StartCoroutine(IsolateLargestPath());
 
+        // Spawn props around the dungeon
+        generationStepText.text = "Step 4: Spawn Props...";
         yield return StartCoroutine(SpawnProps());
+
+        generationStepText.text = "Generation Complete!";
     }
 
     private IEnumerator SpawnStartingAreas()
     {
+        if (areaMinSize > areaMaxSize)
+        {
+            yield break;
+        }
+
         List<Vector2Int> availableAreaSizes = new List<Vector2Int>();
         List<Vector2Int> availableAreaPositions = new List<Vector2Int>();
         List<Rect> areaRects = new List<Rect>();
@@ -96,9 +150,9 @@ public class DungeonGenerator : MonoBehaviour
 
             // Get all of the positions that the area can spawn at
             availableAreaPositions.Clear();
-            for (int x = 1; x < dungeonSize.x - areaSize.x - 1; x++)
+            for (int x = 1; x < dungeonWidth - areaSize.x - 1; x++)
             {
-                for (int y = 1; y < dungeonSize.y - areaSize.y - 1; y++)
+                for (int y = 1; y < dungeonHeight - areaSize.y - 1; y++)
                 {
                     // Make sure the current positions is not already within another area
                     Vector2Int position = new Vector2Int(x, y);
@@ -200,7 +254,7 @@ public class DungeonGenerator : MonoBehaviour
                     map[x, y].CollapsePossibleRooms();
                     SpawnDungeonRoomPrefab(map[x, y], Color.cyan);
 
-                    yield return new WaitForSeconds(generationSpeed);
+                    yield return new WaitForSeconds(GenerationSpeed);
                 }
             }
         }
@@ -209,7 +263,7 @@ public class DungeonGenerator : MonoBehaviour
     private IEnumerator CollapseDungeon()
     {
         int collapseCount = 0;
-        while (collapseCount < dungeonSize.x * dungeonSize.y)
+        while (collapseCount < dungeonWidth * dungeonHeight)
         {
             // Get the positions of the lowest entropy on the map
             List<Vector2Int> lowestEntropyPositions = FindLowestEntropyPositions();
@@ -231,7 +285,7 @@ public class DungeonGenerator : MonoBehaviour
             // Update possible rooms for surrounding possibilities
             UpdateEntropyFromOrigin(collapsePosition);
 
-            yield return new WaitForSeconds(generationSpeed);
+            yield return new WaitForSeconds(GenerationSpeed);
         }
     }
 
@@ -240,9 +294,9 @@ public class DungeonGenerator : MonoBehaviour
         // Get a list of all the positions in the dungeon
         // These positions will slowly deminish 
         List<Vector2Int> unsearchedPositions = new List<Vector2Int>();
-        for (int x = 0; x < dungeonSize.x; x++)
+        for (int x = 0; x < dungeonWidth; x++)
         {
-            for (int y = 0; y < dungeonSize.y; y++)
+            for (int y = 0; y < dungeonHeight; y++)
             {
                 unsearchedPositions.Add(new Vector2Int(x, y));
             }
@@ -321,7 +375,7 @@ public class DungeonGenerator : MonoBehaviour
             }
             newPositions.Clear();
 
-            yield return new WaitForSeconds(generationSpeed);
+            yield return new WaitForSeconds(GenerationSpeed);
         }
 
         // Destroy all dungeon rooms not part of the largest path
@@ -337,22 +391,22 @@ public class DungeonGenerator : MonoBehaviour
             foreach (Vector2Int pathPosition in dungeonPaths[i])
             {
                 Destroy(map[pathPosition.x, pathPosition.y].Object.gameObject);
-                yield return new WaitForSeconds(generationSpeed);
+                yield return new WaitForSeconds(GenerationSpeed);
             }
         }
 
         // Set the color back to default for all the remaining rooms
         foreach (Vector2Int pathPosition in dungeonPaths[largestPathIndex])
         {
-            map[pathPosition.x, pathPosition.y].Object.Color = Color.gray;
+            map[pathPosition.x, pathPosition.y].Object.Color = Color.white;
         }
     }
 
     private IEnumerator SpawnProps()
     {
-        for (int x = 0; x < dungeonSize.x; x++)
+        for (int x = 0; x < dungeonWidth; x++)
         {
-            for (int y = 0; y < dungeonSize.y; y++)
+            for (int y = 0; y < dungeonHeight; y++)
             {
                 // If there is no room at the current position, skip it
                 if (map[x,y].Object == null)
@@ -364,20 +418,19 @@ public class DungeonGenerator : MonoBehaviour
                 if (Random.Range(0f, 1f) < propSpawnChance)
                 {
                     SpawnRandomProp(map[x, y]);
+                    yield return new WaitForSeconds(GenerationSpeed);
                 }
-                
-                yield return new WaitForSeconds(generationSpeed);
             }
         }
     }
 
     private void InitializeRoomPossibilities()
     {
-        map = new DungeonEntry[dungeonSize.x, dungeonSize.y];
+        map = new DungeonEntry[dungeonWidth, dungeonHeight];
 
-        for (int x = 0; x < dungeonSize.x; x++)
+        for (int x = 0; x < dungeonWidth; x++)
         {
-            for (int y = 0; y < dungeonSize.y; y++)
+            for (int y = 0; y < dungeonHeight; y++)
             {
                 // At the start, each room can be any possibility
                 DungeonEntry possibility = new DungeonEntry(this, x, y);
@@ -393,9 +446,9 @@ public class DungeonGenerator : MonoBehaviour
         int lowestEntropyValue = int.MaxValue;
 
         // Loop through all possibilities
-        for (int x = 0; x < dungeonSize.x; x++)
+        for (int x = 0; x < dungeonWidth; x++)
         {
-            for (int y = 0; y < dungeonSize.y; y++)
+            for (int y = 0; y < dungeonHeight; y++)
             {
                 // Get the current entropy at the position
                 int entropy = map[x, y].PossibleRooms.Count;
@@ -484,7 +537,7 @@ public class DungeonGenerator : MonoBehaviour
 
     private bool IsInsideMap(Vector2Int position)
     {
-        return (position.x >= 0 && position.x < dungeonSize.x && position.y >= 0 && position.y < dungeonSize.y);
+        return (position.x >= 0 && position.x < dungeonWidth && position.y >= 0 && position.y < dungeonHeight);
     }
 
     private DungeonRoomObject SpawnDungeonRoomPrefab(DungeonEntry entry, Color color = default)
