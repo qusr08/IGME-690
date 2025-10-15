@@ -316,11 +316,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonSize: {x: 20, y: 20}
-  generationSpeed: 0.05
+  generationSpeed: 0.01
   areaMinSize: 4
   areaMaxSize: 7
   areaCount: 4
-  propPrefabs: []
+  propPrefabs:
+  - {fileID: 7272947436237356564, guid: ad4e40961914bb24d96e645f687717d1, type: 3}
+  - {fileID: 6608820344384791357, guid: cffa7675e70e6b24dbc697499801919c, type: 3}
+  - {fileID: 3981080039256068585, guid: 2df055e7165287b49ae778362c97cde5, type: 3}
   propSpawnChance: 0.05
 --- !u!114 &349818151
 MonoBehaviour:

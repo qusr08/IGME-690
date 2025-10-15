@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
-  m_Name: Room Edge
+  m_Name: SO_DeadEnd
   m_EditorClassIdentifier: 
   _data:
-    Prefab: {fileID: 2136721083392936744, guid: 4fa241f9da41e944799b61cebf61baaf, type: 3}
-    SpawnChance: 1
+    Prefab: {fileID: 5327733318489782000, guid: 9493dbab52419fe48ba61679e35c0f72, type: 3}
+    SpawnChance: 0.5
     Orientation:
       PositiveX: 2
       NegativeX: 1
-      PositiveZ: 1
-      NegativeZ: 1
+      PositiveZ: 2
+      NegativeZ: 2

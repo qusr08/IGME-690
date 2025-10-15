@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class DungeonGenerator : MonoBehaviour
 {
@@ -196,8 +198,7 @@ public class DungeonGenerator : MonoBehaviour
                     // With the above requirements, there should only be one room that can be placed
                     map[x, y].RemoveUnfitRooms(requirements);
                     map[x, y].CollapsePossibleRooms();
-                    SpawnDungeonRoomPrefab(map[x, y]);
-                    map[x, y].Object.Color = Color.cyan;
+                    SpawnDungeonRoomPrefab(map[x, y], Color.cyan);
 
                     yield return new WaitForSeconds(generationSpeed);
                 }
@@ -224,8 +225,7 @@ public class DungeonGenerator : MonoBehaviour
 
             // Randomly select possible room within that possibility
             map[collapsePosition.x, collapsePosition.y].CollapsePossibleRooms();
-            SpawnDungeonRoomPrefab(map[collapsePosition.x, collapsePosition.y]);
-            map[collapsePosition.x, collapsePosition.y].Object.Color = Color.yellow;
+            SpawnDungeonRoomPrefab(map[collapsePosition.x, collapsePosition.y], Color.yellow);
             collapseCount++;
 
             // Update possible rooms for surrounding possibilities
@@ -310,34 +310,13 @@ public class DungeonGenerator : MonoBehaviour
                 searchPositions.Add(newPosition);
                 dungeonPaths[currentPathIndex].Add(newPosition);
                 unsearchedPositions.Remove(newPosition);
-
-                //map[newPosition.x, newPosition.y].RoomGameObject.Color = (currentPathIndex == largestPathIndex ? Color.green : Color.red);
                 map[newPosition.x, newPosition.y].Object.Color = dungeonPathColor;
 
                 // Track the largest path length/index as the paths are discovered
                 if (dungeonPaths[currentPathIndex].Count > largestPathLength)
                 {
                     largestPathLength = dungeonPaths[currentPathIndex].Count;
-
-                    // If there is a new largest index, then change the color of the rooms to reflect that
-                    // Green is for the largest path, red is for all other smaller paths
-                    if (largestPathIndex != currentPathIndex)
-                    {
-                        //if (largestPathIndex > -1)
-                        //{
-                        //    foreach (Vector2Int oldLargestPathPosition in dungeonPaths[largestPathIndex])
-                        //    {
-                        //        map[oldLargestPathPosition.x, oldLargestPathPosition.y].RoomGameObject.Color = Color.red;
-                        //    }
-                        //}
-
-                        //foreach (Vector2Int newLargestPathPosition in dungeonPaths[currentPathIndex])
-                        //{
-                        //    map[newLargestPathPosition.x, newLargestPathPosition.y].RoomGameObject.Color = Color.green;
-                        //}
-
-                        largestPathIndex = currentPathIndex;
-                    }
+                    largestPathIndex = currentPathIndex;
                 }
             }
             newPositions.Clear();
@@ -375,13 +354,18 @@ public class DungeonGenerator : MonoBehaviour
         {
             for (int y = 0; y < dungeonSize.y; y++)
             {
-                if (Random.Range(0f, 1f) < propSpawnChance)
+                // If there is no room at the current position, skip it
+                if (map[x,y].Object == null)
                 {
-                    Transform roomTransform = map[x, y].Object.transform;
-                    GameObject propPrefab = propPrefabs[Random.Range(0, propPrefabs.Count)];
-                    Instantiate(propPrefab, Vector3.zero, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), roomTransform);
+                    continue;
                 }
 
+                // Try to place a prop at the current position
+                if (Random.Range(0f, 1f) < propSpawnChance)
+                {
+                    SpawnRandomProp(map[x, y]);
+                }
+                
                 yield return new WaitForSeconds(generationSpeed);
             }
         }
@@ -503,11 +487,21 @@ public class DungeonGenerator : MonoBehaviour
         return (position.x >= 0 && position.x < dungeonSize.x && position.y >= 0 && position.y < dungeonSize.y);
     }
 
-    private DungeonRoomObject SpawnDungeonRoomPrefab(DungeonEntry entry)
+    private DungeonRoomObject SpawnDungeonRoomPrefab(DungeonEntry entry, Color color = default)
     {
         Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(entry.MapPosition.x, 0f, entry.MapPosition.y);
         Quaternion spawnRotation = Quaternion.Euler(0, entry.CollapsedRoom.Orientation.Rotation * 90, 0);
         entry.Object = Instantiate(entry.CollapsedRoom.Prefab, spawnPosition, spawnRotation, transform).GetComponent<DungeonRoomObject>();
+        entry.Object.Color = color;
+
         return entry.Object;
+    }
+
+    private void SpawnRandomProp(DungeonEntry entry)
+    {
+        GameObject propPrefab = propPrefabs[Random.Range(0, propPrefabs.Count)];
+        Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(entry.MapPosition.x, 0f, entry.MapPosition.y);
+        Quaternion spawnRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+        Instantiate(propPrefab, spawnPosition, spawnRotation, entry.Object.transform);
     }
 }

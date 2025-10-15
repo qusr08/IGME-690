@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
-  m_Name: Room Corner
+  m_Name: SO_Hallway
   m_EditorClassIdentifier: 
   _data:
-    Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
-    SpawnChance: 2
+    Prefab: {fileID: 802769632110312128, guid: 76599ec856f6d944c9aaba7dafeaddd2, type: 3}
+    SpawnChance: 1
     Orientation:
       PositiveX: 2
-      NegativeX: 1
+      NegativeX: 2
       PositiveZ: 1
-      NegativeZ: 2
+      NegativeZ: 1
