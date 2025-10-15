@@ -63,6 +63,8 @@ public class DungeonGenerator : MonoBehaviour
 
 		// Find the largest path through the dungeon and remove all of the rooms that are not part of it
 		yield return StartCoroutine(IsolateLargestPath());
+
+		yield return StartCoroutine(SpawnProps());
 	}
 
 	private IEnumerator SpawnStartingAreas()
@@ -326,6 +328,11 @@ public class DungeonGenerator : MonoBehaviour
 				yield return new WaitForSeconds(generationSpeed);
 			}
 		}
+	}
+
+	private IEnumerator SpawnProps()
+	{
+		yield return null;
 	}
 
 	private void InitializeRoomPossibilities()

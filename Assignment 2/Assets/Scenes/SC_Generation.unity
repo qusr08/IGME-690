@@ -316,9 +316,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonSize: {x: 20, y: 20}
-  generationSpeed: 0.01
-  areaMinSize: 5
-  areaMaxSize: 9
+  generationSpeed: 0.005
+  areaMinSize: 4
+  areaMaxSize: 7
   areaCount: 4
 --- !u!114 &349818151
 MonoBehaviour:
