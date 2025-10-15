@@ -325,7 +325,7 @@ public class DungeonGenerator : MonoBehaviour
             if (searchPositions.Count == 0)
             {
                 currentPathIndex++;
-                dungeonPathColor = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+                dungeonPathColor = new Color(Random.Range(0.25f, 1f), Random.Range(0.25f, 1f), Random.Range(0.25f, 1f));
 
                 dungeonPaths.Add(new List<Vector2Int>());
                 newPositions.Add(unsearchedPositions[0]);

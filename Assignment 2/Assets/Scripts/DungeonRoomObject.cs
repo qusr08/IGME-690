@@ -22,7 +22,7 @@ public class DungeonRoomObject : MonoBehaviour
                 floor.material = floorMaterial;
             }
 
-            Color wallColor = Color.HSVToRGB(h, s, v * 0.5f);
+            Color wallColor = Color.HSVToRGB(h, s, v * 0.65f);
             foreach (MeshRenderer wall in walls)
             {
                 Material wallMaterial = new Material(wall.material);
