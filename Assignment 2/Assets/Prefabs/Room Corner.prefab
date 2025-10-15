@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7263294988682289924}
   - component: {fileID: 470206446463297711}
   m_Layer: 0
-  m_Name: Wall
+  m_Name: Wall 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 365161472959788130}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 5, z: 0}
-  m_LocalScale: {x: 1, y: 10, z: 10}
+  m_LocalPosition: {x: 4.75, y: 5, z: 0}
+  m_LocalScale: {x: 0.5, y: 9, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2791337790101832053}
@@ -337,7 +337,7 @@ GameObject:
   - component: {fileID: 3505573803106698472}
   - component: {fileID: 4105481134389050470}
   m_Layer: 0
-  m_Name: Wall
+  m_Name: Wall 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -352,8 +352,8 @@ Transform:
   m_GameObject: {fileID: 7295300399772108004}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 5, z: -5}
-  m_LocalScale: {x: 10, y: 10, z: 1}
+  m_LocalPosition: {x: 0, y: 5, z: -4.75}
+  m_LocalScale: {x: 10, y: 9, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2791337790101832053}
@@ -441,6 +441,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2791337790101832053}
+  - component: {fileID: 1673108611971487841}
   m_Layer: 0
   m_Name: Room Corner
   m_TagString: Untagged
@@ -467,3 +468,21 @@ Transform:
   - {fileID: 2410703175128912658}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1673108611971487841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7824773119120601897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3482d454a5621c489acb0e5f3b6b662, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floors:
+  - {fileID: 1971654603956812422}
+  walls:
+  - {fileID: 3505573803106698472}
+  - {fileID: 7263294988682289924}
+  _color: {r: 0, g: 0, b: 0, a: 0}

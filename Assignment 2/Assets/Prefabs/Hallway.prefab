@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2579459572291497940}
   - component: {fileID: 3857993524234107399}
   m_Layer: 0
-  m_Name: Wall
+  m_Name: Wall 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 186976648154114892}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5, y: 5, z: 0}
-  m_LocalScale: {x: 1, y: 10, z: 10}
+  m_LocalPosition: {x: -4.75, y: 5, z: 0}
+  m_LocalScale: {x: 0.5, y: 9, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7294973555089452873}
@@ -117,6 +117,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7294973555089452873}
+  - component: {fileID: 2958963938482855540}
   m_Layer: 0
   m_Name: Hallway
   m_TagString: Untagged
@@ -143,6 +144,24 @@ Transform:
   - {fileID: 5020050120375440204}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2958963938482855540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802769632110312128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3482d454a5621c489acb0e5f3b6b662, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floors:
+  - {fileID: 796553003403648447}
+  walls:
+  - {fileID: 2579459572291497940}
+  - {fileID: 6145991789004212906}
+  _color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &3932428574424536893
 GameObject:
   m_ObjectHideFlags: 0
@@ -156,7 +175,7 @@ GameObject:
   - component: {fileID: 6145991789004212906}
   - component: {fileID: 6381214540611705148}
   m_Layer: 0
-  m_Name: Wall
+  m_Name: Wall 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -171,8 +190,8 @@ Transform:
   m_GameObject: {fileID: 3932428574424536893}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 5, z: 0}
-  m_LocalScale: {x: 1, y: 10, z: 10}
+  m_LocalPosition: {x: 4.75, y: 5, z: 0}
+  m_LocalScale: {x: 0.5, y: 9, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7294973555089452873}

@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7897498990785471362}
+  - component: {fileID: 1870629887317194763}
   m_Layer: 0
   m_Name: Room Middle
   m_TagString: Untagged
@@ -33,6 +34,22 @@ Transform:
   - {fileID: 3176344356876282394}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1870629887317194763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2140376338157009751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3482d454a5621c489acb0e5f3b6b662, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  floors:
+  - {fileID: 2640795174068297159}
+  walls: []
+  _color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &6263161179390021335
 GameObject:
   m_ObjectHideFlags: 0
