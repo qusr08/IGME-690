@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using UnityEngine;
 
+[Serializable]
+public class DungeonRoomDictionary : SerializableDictionary<DungeonRoomType, DungeonRoomSO> { }
+
 public abstract class SerializableDictionaryBase<TKey, TValue, TValueStorage> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
 {
 	[SerializeField]
@@ -124,3 +127,4 @@ public class SerializableDictionary<TKey, TValue, TValueStorage> : SerializableD
 		storage[i].data = value;
 	}
 }
+

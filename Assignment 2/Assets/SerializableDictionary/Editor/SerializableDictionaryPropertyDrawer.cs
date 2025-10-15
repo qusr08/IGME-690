@@ -5,6 +5,9 @@ using UnityEditor;
 using System.Reflection;
 using System;
 
+[CustomPropertyDrawer(typeof(DungeonRoomDictionary))]
+public class AnySerializableDictionaryPropertyDrawer : SerializableDictionaryPropertyDrawer { }
+
 public class SerializableDictionaryPropertyDrawer : PropertyDrawer
 {
 	const string KeysFieldName = "m_keys";

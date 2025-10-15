@@ -12,13 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
   m_Name: Room Edge
   m_EditorClassIdentifier: 
-  Prefab: {fileID: 2136721083392936744, guid: 4fa241f9da41e944799b61cebf61baaf, type: 3}
-  SpawnChance: 1
-  Orientation:
-    PositiveX: 2
-    NegativeX: 1
-    PositiveY: 2
-    NegativeY: 2
-    PositiveZ: 1
-    NegativeZ: 1
-    Rotation: 0
+  _data:
+    Prefab: {fileID: 2136721083392936744, guid: 4fa241f9da41e944799b61cebf61baaf, type: 3}
+    SpawnChance: 1
+    Orientation:
+      PositiveX: 2
+      NegativeX: 1
+      PositiveZ: 1
+      NegativeZ: 1

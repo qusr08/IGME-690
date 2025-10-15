@@ -39,17 +39,19 @@ public class DungeonEntry
         return removedRooms;
     }
 
-    public void ForceCollapseRoom(DungeonRoom room)
+    public DungeonRoom ForceCollapseRoom(DungeonRoom room, int rotation = 0)
     {
         if (IsCollapsed)
         {
-            return;
+            return null;
         }
 
-        CollapsedRoom = room;
+        CollapsedRoom = new DungeonRoom(room, new RoomOrientation(room.Orientation, rotation));
         IsCollapsed = true;
         PossibleRooms.Clear();
-    }
+
+		return CollapsedRoom;
+	}
 
     public DungeonRoom CollapsePossibleRooms()
     {

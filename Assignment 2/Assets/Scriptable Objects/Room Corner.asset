@@ -12,13 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07a5bb990d8fda149b31e14d3f97bfd9, type: 3}
   m_Name: Room Corner
   m_EditorClassIdentifier: 
-  Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
-  SpawnChance: 1
-  Orientation:
-    PositiveX: 2
-    NegativeX: 1
-    PositiveY: 2
-    NegativeY: 2
-    PositiveZ: 1
-    NegativeZ: 2
-    Rotation: 0
+  _data:
+    Prefab: {fileID: 7824773119120601897, guid: f9c24e55af15c58429dc65fb461a249e, type: 3}
+    SpawnChance: 1
+    Orientation:
+      PositiveX: 2
+      NegativeX: 1
+      PositiveZ: 1
+      NegativeZ: 2
