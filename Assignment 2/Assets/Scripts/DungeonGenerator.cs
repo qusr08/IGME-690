@@ -2,47 +2,52 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class DungeonGenerator : MonoBehaviour
 {
 	[SerializeField] private Vector2Int dungeonSize;
 	[SerializeField, Min(0f)] private float generationSpeed;
 	[Space]
-	[SerializeField] private Vector2Int areaMinSize;
-	[SerializeField] private Vector2Int areaMaxSize;
+	[SerializeField, Range(3, 15)] private int areaMinSize;
+	[SerializeField, Range(3, 15)] private int areaMaxSize;
 	[SerializeField, Range(0f, 10f)] private int areaCount;
 
 	private DungeonRoomLibrary roomLibrary;
 	private DungeonEntry[,] map;
-	private List<GameObject> dungeonRoomObjects;
 
-	private void Awake ()
+	private void Awake()
 	{
 		roomLibrary = GetComponent<DungeonRoomLibrary>();
-		dungeonRoomObjects = new List<GameObject>();
 	}
 
-	private void Start ()
+	private void Start()
 	{
 		GenerateMap();
 	}
 
-	public void GenerateMap ()
+	public void GenerateMap()
 	{
 		StopAllCoroutines();
 
 		// Destroy all rooms so they can be regenerated
-		for (int i = dungeonRoomObjects.Count - 1; i >= 0; i--)
+		if (map != null)
 		{
-			Destroy(dungeonRoomObjects[i]);
+			for (int x = 0; x < dungeonSize.x; x++)
+			{
+				for (int y = 0; y < dungeonSize.y; y++)
+				{
+					if (map[x, y].RoomGameObject != null)
+					{
+						Destroy(map[x, y].RoomGameObject);
+					}
+				}
+			}
 		}
-		dungeonRoomObjects.Clear();
 
 		StartCoroutine(GenerateMapCoroutine());
 	}
 
-	private IEnumerator GenerateMapCoroutine ()
+	private IEnumerator GenerateMapCoroutine()
 	{
 		// Create a list of all the dungeon possibility entries for the map
 		InitializeRoomPossibilities();
@@ -56,23 +61,20 @@ public class DungeonGenerator : MonoBehaviour
 		// Use wave function collapse algorithm to create the rest of the dungeon
 		yield return StartCoroutine(CollapseDungeon());
 
-		// Find the largest path through the dungeon and tag all of the rooms that they are part of it
-		yield return StartCoroutine(FindLargestDungeonPath());
-
-		// Remove all rooms that are not connected to the largest dungeon path
-		yield return StartCoroutine(RemoveInvalidRooms());
+		// Find the largest path through the dungeon and remove all of the rooms that are not part of it
+		yield return StartCoroutine(IsolateLargestPath());
 	}
 
-	private IEnumerator SpawnStartingAreas ()
+	private IEnumerator SpawnStartingAreas()
 	{
 		List<Vector2Int> availableAreaSizes = new List<Vector2Int>();
 		List<Vector2Int> availableAreaPositions = new List<Vector2Int>();
 		List<Rect> areaRects = new List<Rect>();
 
 		// Get a list of all the possible area sizes
-		for (int x = areaMinSize.x; x <= areaMaxSize.x; x++)
+		for (int x = areaMinSize; x <= areaMaxSize; x++)
 		{
-			for (int y = areaMinSize.y; y <= areaMaxSize.y; y++)
+			for (int y = areaMinSize; y <= areaMaxSize; y++)
 			{
 				availableAreaSizes.Add(new Vector2Int(x, y));
 			}
@@ -159,22 +161,36 @@ public class DungeonGenerator : MonoBehaviour
 				for (int y = areaPosition.y; y < areaPosition.y + areaSize.y; y++)
 				{
 					Vector2Int currentPosition = new Vector2Int(x, y);
+					bool doorSpawn = doorPositions.Contains(currentPosition);
 
 					// Check the surrounding rooms to make sure that all rooms can lead into each other
-					requirements.PositiveX = (x == areaPosition.x + areaSize.x - 1 && GetOrientationAtPosition(currentPosition + Vector2Int.right).NegativeX == ConnectionType.ANY ? ConnectionType.WALL : ConnectionType.AIR);
-					requirements.NegativeX = (x == areaPosition.x && GetOrientationAtPosition(currentPosition + Vector2Int.left).PositiveX == ConnectionType.ANY ? ConnectionType.WALL : ConnectionType.AIR);
-					requirements.PositiveZ = (y == areaPosition.y + areaSize.y - 1 && GetOrientationAtPosition(currentPosition + Vector2Int.up).NegativeZ == ConnectionType.ANY ? ConnectionType.WALL : ConnectionType.AIR);
-					requirements.NegativeZ = (y == areaPosition.y && GetOrientationAtPosition(currentPosition + Vector2Int.down).PositiveZ == ConnectionType.ANY ? ConnectionType.WALL : ConnectionType.AIR);
-
-					// If there is a door at the current position, then make sure all surrounding blocks are air
-					if (doorPositions.Contains(currentPosition))
+					requirements.PositiveX = GetOrientationAtPosition(currentPosition + Vector2Int.right).NegativeX;
+					if (requirements.PositiveX == ConnectionType.ANY)
 					{
-						requirements = new RoomOrientation(ConnectionType.AIR);
+						requirements.PositiveX = (x == areaPosition.x + areaSize.x - 1 && !doorSpawn ? ConnectionType.WALL : ConnectionType.AIR);
+					}
+
+					requirements.NegativeX = GetOrientationAtPosition(currentPosition + Vector2Int.left).PositiveX;
+					if (requirements.NegativeX == ConnectionType.ANY)
+					{
+						requirements.NegativeX = (x == areaPosition.x && !doorSpawn ? ConnectionType.WALL : ConnectionType.AIR);
+					}
+
+					requirements.PositiveZ = GetOrientationAtPosition(currentPosition + Vector2Int.up).NegativeZ;
+					if (requirements.PositiveZ == ConnectionType.ANY)
+					{
+						requirements.PositiveZ = (y == areaPosition.y + areaSize.y - 1 && !doorSpawn ? ConnectionType.WALL : ConnectionType.AIR);
+					}
+
+					requirements.NegativeZ = GetOrientationAtPosition(currentPosition + Vector2Int.down).PositiveZ;
+					if (requirements.NegativeZ == ConnectionType.ANY)
+					{
+						requirements.NegativeZ = (y == areaPosition.y && !doorSpawn ? ConnectionType.WALL : ConnectionType.AIR);
 					}
 
 					// With the above requirements, there should only be one room that can be placed
 					map[x, y].RemoveUnfitRooms(requirements);
-					SpawnDungeonRoomPrefab(map[x, y].CollapsePossibleRooms(), currentPosition);
+					map[x, y].CollapsePossibleRooms();
 
 					yield return new WaitForSeconds(generationSpeed);
 				}
@@ -182,7 +198,7 @@ public class DungeonGenerator : MonoBehaviour
 		}
 	}
 
-	private IEnumerator CollapseDungeon ()
+	private IEnumerator CollapseDungeon()
 	{
 		int collapseCount = 0;
 		while (collapseCount < dungeonSize.x * dungeonSize.y)
@@ -200,7 +216,7 @@ public class DungeonGenerator : MonoBehaviour
 			Vector2Int collapsePosition = lowestEntropyPositions[Random.Range(0, lowestEntropyPositions.Count)];
 
 			// Randomly select possible room within that possibility
-			SpawnDungeonRoomPrefab(map[collapsePosition.x, collapsePosition.y].CollapsePossibleRooms(), collapsePosition);
+			map[collapsePosition.x, collapsePosition.y].CollapsePossibleRooms();
 			collapseCount++;
 
 			// Update possible rooms for surrounding possibilities
@@ -210,17 +226,109 @@ public class DungeonGenerator : MonoBehaviour
 		}
 	}
 
-	private IEnumerator FindLargestDungeonPath ()
+	private IEnumerator IsolateLargestPath()
 	{
-		yield return null;
+		// Get a list of all the positions in the dungeon
+		// These positions will slowly deminish 
+		List<Vector2Int> unsearchedPositions = new List<Vector2Int>();
+		for (int x = 0; x < dungeonSize.x; x++)
+		{
+			for (int y = 0; y < dungeonSize.y; y++)
+			{
+				unsearchedPositions.Add(new Vector2Int(x, y));
+			}
+		}
+
+		// A list of all the paths through the dungeon
+		List<List<Vector2Int>> dungeonPaths = new List<List<Vector2Int>>();
+		int currentPathIndex = -1;
+		int largestPathLength = 0;
+		int largestPathIndex = -1;
+
+		// A list of all the positions that were just searched in the previous loop
+		List<Vector2Int> searchPositions = new List<Vector2Int>();
+
+		// Keep looping until every position is searched
+		while (unsearchedPositions.Count > 0)
+		{
+			if (searchPositions.Count == 0)
+			{
+				currentPathIndex++;
+				dungeonPaths.Add(new List<Vector2Int>() { unsearchedPositions[0] });
+				searchPositions.Add(unsearchedPositions[0]);
+				unsearchedPositions.RemoveAt(0);
+				continue;
+			}
+
+			// Based on the last searched positions, add adjacent positions to
+			List<Vector2Int> newPositions = new List<Vector2Int>();
+			foreach (Vector2Int lastPosition in searchPositions)
+			{
+				RoomOrientation orientation = GetOrientationAtPosition(lastPosition);
+
+				// If the current room connects to air on a specific side, then add that adjacent position to the list of new positions
+				// This will allow for the dungeon path to grow over time
+				if (orientation.PositiveX == ConnectionType.AIR)
+				{
+					newPositions.Add(lastPosition + Vector2Int.right);
+				}
+				if (orientation.NegativeX == ConnectionType.AIR)
+				{
+					newPositions.Add(lastPosition + Vector2Int.left);
+				}
+				if (orientation.PositiveZ == ConnectionType.AIR)
+				{
+					newPositions.Add(lastPosition + Vector2Int.up);
+				}
+				if (orientation.NegativeZ == ConnectionType.AIR)
+				{
+					newPositions.Add(lastPosition + Vector2Int.down);
+				}
+			}
+
+			// Add the newly searched positions to the last searched position list
+			searchPositions.Clear();
+			foreach (Vector2Int newPosition in newPositions)
+			{
+				// Make sure there are no duplicate positions, only take from the unsearched positions
+				if (!unsearchedPositions.Contains(newPosition))
+				{
+					continue;
+				}
+
+				searchPositions.Add(newPosition);
+				dungeonPaths[currentPathIndex].Add(newPosition);
+				unsearchedPositions.Remove(newPosition);
+
+				// Track the largest path length/index as the paths are discovered
+				if (dungeonPaths[currentPathIndex].Count > largestPathLength)
+				{
+					largestPathLength = dungeonPaths[currentPathIndex].Count;
+					largestPathIndex = currentPathIndex;
+				}
+			}
+		}
+
+		// Destroy all dungeon rooms not part of the largest path
+		for (int i = 0; i < dungeonPaths.Count; i++)
+		{
+			// Make sure not to destroy the largest path
+			if (i == largestPathIndex)
+			{
+				continue;
+			}
+
+			for (int j = 0; j < dungeonPaths[i].Count; j++)
+			{
+				Vector2Int position = dungeonPaths[i][j];
+				Destroy(map[position.x, position.y].RoomGameObject);
+
+				yield return new WaitForSeconds(generationSpeed);
+			}
+		}
 	}
 
-	private IEnumerator RemoveInvalidRooms ()
-	{
-		yield return null;
-	}
-
-	private void InitializeRoomPossibilities ()
+	private void InitializeRoomPossibilities()
 	{
 		map = new DungeonEntry[dungeonSize.x, dungeonSize.y];
 
@@ -229,14 +337,14 @@ public class DungeonGenerator : MonoBehaviour
 			for (int y = 0; y < dungeonSize.y; y++)
 			{
 				// At the start, each room can be any possibility
-				DungeonEntry possibility = new DungeonEntry(x, y);
+				DungeonEntry possibility = new DungeonEntry(this, x, y);
 				possibility.PossibleRooms.AddRange(roomLibrary.AllDungeonRooms);
 				map[x, y] = possibility;
 			}
 		}
 	}
 
-	private List<Vector2Int> FindLowestEntropyPositions ()
+	private List<Vector2Int> FindLowestEntropyPositions()
 	{
 		List<Vector2Int> lowestEntropyPositions = new List<Vector2Int>();
 		int lowestEntropyValue = int.MaxValue;
@@ -267,7 +375,7 @@ public class DungeonGenerator : MonoBehaviour
 		return lowestEntropyPositions;
 	}
 
-	private void UpdateEntropyFromOrigin (Vector2Int origin, bool forceEntireMap = false)
+	private void UpdateEntropyFromOrigin(Vector2Int origin, bool forceEntireMap = false)
 	{
 		// Get a list of the current positions to check
 		List<Vector2Int> updatePositions = new List<Vector2Int>() {
@@ -319,7 +427,7 @@ public class DungeonGenerator : MonoBehaviour
 		}
 	}
 
-	private RoomOrientation GetOrientationAtPosition (Vector2Int position)
+	private RoomOrientation GetOrientationAtPosition(Vector2Int position)
 	{
 		// If the position is outside the bounds of the map, return a default orientation will all of the values set to be walls
 		// This will ensure that any room being collapsed at the edge of the map will have walls surrounding it
@@ -331,20 +439,15 @@ public class DungeonGenerator : MonoBehaviour
 		return map[position.x, position.y].CollapsedRoom.Orientation;
 	}
 
-	private bool IsInsideMap (Vector2Int position)
+	private bool IsInsideMap(Vector2Int position)
 	{
 		return (position.x >= 0 && position.x < dungeonSize.x && position.y >= 0 && position.y < dungeonSize.y);
 	}
 
-	private void SpawnDungeonRoomPrefab (DungeonRoom room, Vector2Int position)
+	public void SpawnDungeonRoomPrefab(DungeonEntry entry)
 	{
-		if (room == null)
-		{
-			return;
-		}
-
-		Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(position.x, 0f, position.y);
-		Quaternion spawnRotation = Quaternion.Euler(0, room.Orientation.Rotation * 90, 0);
-		dungeonRoomObjects.Add(Instantiate(room.Prefab, spawnPosition, spawnRotation, transform));
+		Vector3 spawnPosition = roomLibrary.RoomSize * new Vector3(entry.MapPosition.x, 0f, entry.MapPosition.y);
+		Quaternion spawnRotation = Quaternion.Euler(0, entry.CollapsedRoom.Orientation.Rotation * 90, 0);
+		entry.RoomGameObject = Instantiate(entry.CollapsedRoom.Prefab, spawnPosition, spawnRotation, transform);
 	}
 }

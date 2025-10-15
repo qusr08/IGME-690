@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _data:
     Prefab: {fileID: 5327733318489782000, guid: 9493dbab52419fe48ba61679e35c0f72, type: 3}
-    SpawnChance: 0.25
+    SpawnChance: 0.5
     Orientation:
       PositiveX: 2
       NegativeX: 1

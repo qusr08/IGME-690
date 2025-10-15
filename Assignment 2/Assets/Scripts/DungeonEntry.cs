@@ -7,14 +7,20 @@ public class DungeonEntry
     public DungeonRoom CollapsedRoom { get; private set; }
     public Vector2Int MapPosition { get; private set; }
     public bool IsCollapsed { get; private set; }
+	public GameObject RoomGameObject;
 
-    public DungeonEntry(int x, int y)
+    private DungeonGenerator dungeonGenerator;
+
+	public DungeonEntry(DungeonGenerator dungeonGenerator, int x, int y)
     {
+        this.dungeonGenerator = dungeonGenerator;
+
         PossibleRooms = new List<DungeonRoom>();
         CollapsedRoom = new DungeonRoom(null, 0, new RoomOrientation());
         MapPosition = new Vector2Int(x, y);
         IsCollapsed = false;
-    }
+		RoomGameObject = null;
+	}
 
     public int RemoveUnfitRooms(RoomOrientation requirements)
     {
@@ -39,25 +45,11 @@ public class DungeonEntry
         return removedRooms;
     }
 
-    public DungeonRoom ForceCollapseRoom(DungeonRoom room, int rotation = 0)
-    {
-        if (IsCollapsed)
-        {
-            return null;
-        }
-
-        CollapsedRoom = new DungeonRoom(room, new RoomOrientation(room.Orientation, rotation));
-        IsCollapsed = true;
-        PossibleRooms.Clear();
-
-		return CollapsedRoom;
-	}
-
-    public DungeonRoom CollapsePossibleRooms()
+    public void CollapsePossibleRooms()
     {
         if (IsCollapsed || PossibleRooms.Count == 0)
         {
-            return null;
+            return;
         }
 
         // Get a list containing all spawn chances at their corresponding indices
@@ -82,11 +74,9 @@ public class DungeonEntry
                 CollapsedRoom = PossibleRooms[i];
                 IsCollapsed = true;
                 PossibleRooms.Clear();
-
-                return CollapsedRoom;
+                dungeonGenerator.SpawnDungeonRoomPrefab(this);
+                return;
             }
         }
-
-        return null;
     }
 }
