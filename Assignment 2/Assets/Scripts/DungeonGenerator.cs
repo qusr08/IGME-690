@@ -94,7 +94,7 @@ public class DungeonGenerator : MonoBehaviour
 
         // Set the position of this generator and the camera based on the size of the dungeon
         transform.position = new Vector3(-dungeonWidth / 2f, 0f, -dungeonHeight / 2f) * roomLibrary.RoomSize;
-        cameraTransform.position = new Vector3(0f, dungeonWidth * 10f, dungeonHeight * -2f);
+        cameraTransform.position = new Vector3(0f, Mathf.Max(dungeonWidth, dungeonHeight) * 10f, dungeonHeight * -2f);
         cameraTransform.LookAt(new Vector3(0f, 0f, dungeonHeight * -0.5f));
 
         StartCoroutine(GenerateMapCoroutine());
@@ -156,9 +156,9 @@ public class DungeonGenerator : MonoBehaviour
 
             // Get all of the positions that the area can spawn at
             availableAreaPositions.Clear();
-            for (int x = 1; x < dungeonWidth - areaSize.x - 1; x++)
+            for (int x = 1; x < dungeonWidth - areaSize.x; x++)
             {
-                for (int y = 1; y < dungeonHeight - areaSize.y - 1; y++)
+                for (int y = 1; y < dungeonHeight - areaSize.y; y++)
                 {
                     // Make sure the current positions is not already within another area
                     Vector2Int position = new Vector2Int(x, y);
@@ -486,10 +486,13 @@ public class DungeonGenerator : MonoBehaviour
             origin + Vector2Int.up,
             origin + Vector2Int.down
         };
-        List<Vector2Int> clearedPositions = new List<Vector2Int>()
+        List<Vector2Int> clearedPositions = new List<Vector2Int>();
+
+        // Add the origin if the whole map should be updated
+        if (!forceEntireMap)
         {
-            origin
-        };
+            clearedPositions.Add(origin);
+        }
 
         // Keep updating until there are no more positions to update
         Vector2Int currentPosition;

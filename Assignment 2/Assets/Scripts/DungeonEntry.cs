@@ -20,6 +20,12 @@ public class DungeonEntry
 
     public int RemoveUnfitRooms(RoomOrientation requirements)
     {
+        // There are no rooms to remove, so return 0
+        if (IsCollapsed)
+        {
+            return 0;
+        }
+
         int removedRooms = 0;
 
         // Loop through possible rooms for the current position and remove ones that do not match the requirements
