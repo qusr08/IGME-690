@@ -17,7 +17,9 @@ public class ProceduralMeshComponent : MonoBehaviour
 		MeshJob<CubeSphere, SingleStream>.ScheduleParallel,
 		MeshJob<SharedCubeSphere, PositionStream>.ScheduleParallel,
 		MeshJob<Octasphere, SingleStream>.ScheduleParallel,
-		MeshJob<GeoOctasphere, SingleStream>.ScheduleParallel
+		MeshJob<GeoOctasphere, SingleStream>.ScheduleParallel,
+		MeshJob<Icosphere, PositionStream>.ScheduleParallel,
+		MeshJob<GeoIcosphere, PositionStream>.ScheduleParallel
 	};
 
 	[SerializeField] private Material[] _materials;
