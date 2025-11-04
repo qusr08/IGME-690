@@ -1,8 +1,9 @@
 using ProceduralMesh;
+using ProceduralMesh.Generators;
 using ProceduralMesh.Streams;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using WorldNavigation;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralMeshComponent : MonoBehaviour
@@ -160,6 +161,6 @@ public class ProceduralMeshComponent : MonoBehaviour
 			_mesh.Optimize();
 		}
 
-		Debug.Log(MeshTriangleNeighbors.GetNeighbors(_mesh).ToCommaSeparatedString());
-	}
+		MeshTriangleNeighbors.CalculateTriangleNeighbors(_mesh);
+    }
 }

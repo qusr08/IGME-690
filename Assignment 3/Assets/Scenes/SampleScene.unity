@@ -530,7 +530,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 5dbf512589b54054f868a3418557e25c, type: 2}
   - {fileID: 2100000, guid: 2dd7902c467c3bb4eb70072117ec5ef7, type: 2}
   - {fileID: 2100000, guid: f41044b5e87777349a19fd4fb77618ab, type: 2}
-  _resolution: 4
+  _resolution: 1
   _meshType: 11
   _gizmoMode: 1
   _materialMode: 3
