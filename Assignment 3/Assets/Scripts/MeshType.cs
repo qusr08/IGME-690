@@ -1,4 +1,4 @@
 public enum MeshType
 {
-	SquareGrid, SharedSquareGrid, SharedTriangleGrid, PointyHexagonGrid, FlatHexagonGrid, UVSphere, CubeSphere, SharedCubeSphere, Octasphere
+	SquareGrid, SharedSquareGrid, SharedTriangleGrid, PointyHexagonGrid, FlatHexagonGrid, UVSphere, CubeSphere, SharedCubeSphere, Octasphere, GeoOctasphere
 }
