@@ -1,5 +1,6 @@
 using ProceduralMesh;
 using ProceduralMesh.Streams;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -158,5 +159,7 @@ public class ProceduralMeshComponent : MonoBehaviour
 		{
 			_mesh.Optimize();
 		}
+
+		Debug.Log(MeshTriangleNeighbors.GetNeighbors(_mesh).ToCommaSeparatedString());
 	}
 }
