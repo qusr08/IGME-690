@@ -12,7 +12,8 @@ public class ProceduralMeshComponent : MonoBehaviour
         MeshJob<SharedTriangleGrid, SingleStream>.ScheduleParallel,
         MeshJob<PointyHexagonGrid, SingleStream>.ScheduleParallel,
         MeshJob<FlatHexagonGrid, SingleStream>.ScheduleParallel,
-        MeshJob<UVSphere, SingleStream>.ScheduleParallel
+        MeshJob<UVSphere, SingleStream>.ScheduleParallel,
+        MeshJob<CubeSphere, SingleStream>.ScheduleParallel
     };
 
     [SerializeField] private Material[] _materials;
