@@ -15,7 +15,7 @@ public struct SharedTriangleGrid : IMeshGenerator
     public int JobLength => Resolution + 1;
     public Bounds Bounds => new Bounds(Vector3.zero, new Vector3(1f + 0.5f / Resolution, 0f, sqrt(3f) / 2f));
 
-    public void Execute<S>(int z, S streams) where S : struct, IMeshStreams
+    public void Execute<S>(int z, S streams) where S : struct, IMeshStream
     {
         int vi = (Resolution + 1) * z;
         int ti = 2 * Resolution * (z - 1);

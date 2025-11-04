@@ -15,7 +15,7 @@ public struct SquareGrid : IMeshGenerator
 	public int JobLength => Resolution;
 	public Bounds Bounds => new Bounds(Vector3.zero, new Vector3(1f, 0f, 1f));
 
-	public void Execute<S>(int z, S streams) where S : struct, IMeshStreams
+	public void Execute<S>(int z, S streams) where S : struct, IMeshStream
 	{
 		int vi = 4 * Resolution * z;
 		int ti = 2 * Resolution * z;

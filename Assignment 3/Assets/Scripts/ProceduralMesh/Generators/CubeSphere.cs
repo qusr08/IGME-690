@@ -21,7 +21,7 @@ public struct CubeSphere : IMeshGenerator
     public int JobLength => 6 * Resolution;
     public Bounds Bounds => new Bounds(Vector3.zero, new Vector3(2f, 2f, 2f));
 
-    public void Execute<S>(int i, S streams) where S : struct, IMeshStreams
+    public void Execute<S>(int i, S streams) where S : struct, IMeshStream
     {
         int u = i / 6;
         Side side = GetSide(i - 6 * u);

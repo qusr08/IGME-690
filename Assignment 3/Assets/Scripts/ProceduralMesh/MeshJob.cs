@@ -10,7 +10,7 @@ namespace ProceduralMesh
 	public delegate JobHandle MeshJobScheduleDelegate(Mesh mesh, Mesh.MeshData meshData, int resolution, JobHandle dependency);
 
 	[BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
-	public struct MeshJob<G, S> : IJobFor where G : struct, IMeshGenerator where S : struct, IMeshStreams
+	public struct MeshJob<G, S> : IJobFor where G : struct, IMeshGenerator where S : struct, IMeshStream
 	{
 
 		private G _generator;

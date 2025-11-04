@@ -11,6 +11,6 @@ namespace ProceduralMesh.Generators
         int JobLength { get; }
         Bounds Bounds { get; }
 
-        void Execute<S>(int i, S streams) where S : struct, IMeshStreams;
+        void Execute<S>(int i, S streams) where S : struct, IMeshStream;
     }
 }

@@ -17,7 +17,7 @@ public struct UVSphere : IMeshGenerator
     public int JobLength => ResolutionU + 1;
     public Bounds Bounds => new Bounds(Vector3.zero, new Vector3(2f, 2f, 2f));
 
-    public void Execute<S>(int u, S streams) where S : struct, IMeshStreams
+    public void Execute<S>(int u, S streams) where S : struct, IMeshStream
     {
         if (u == 0)
         {
@@ -29,7 +29,7 @@ public struct UVSphere : IMeshGenerator
         }
     }
 
-    public void ExecuteRegular<S>(int u, S streams) where S : struct, IMeshStreams
+    public void ExecuteRegular<S>(int u, S streams) where S : struct, IMeshStream
     {
         int vi = (ResolutionV + 1) * u - 2;
         int ti = 2 * (ResolutionV - 1) * (u - 1);
@@ -76,7 +76,7 @@ public struct UVSphere : IMeshGenerator
         streams.SetTriangle(ti, vi + int3(shiftLeft - 1, 0, -1));
     }
 
-    public void ExecuteSeam<S>(S streams) where S : struct, IMeshStreams
+    public void ExecuteSeam<S>(S streams) where S : struct, IMeshStream
     {
         Vertex vertex = new Vertex();
         vertex.tangent.x = 1f;

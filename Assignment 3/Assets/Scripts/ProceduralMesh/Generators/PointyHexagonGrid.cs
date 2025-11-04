@@ -15,7 +15,7 @@ public struct PointyHexagonGrid : IMeshGenerator
     public int JobLength => Resolution;
     public Bounds Bounds => new Bounds(Vector3.zero, new Vector3((Resolution > 1 ? 0.5f + 0.25f / Resolution : 0.5f) * sqrt(3f), 0f, 0.75f + 0.25f / Resolution));
 
-    public void Execute<S>(int z, S streams) where S : struct, IMeshStreams
+    public void Execute<S>(int z, S streams) where S : struct, IMeshStream
     {
         int vi = 7 * Resolution * z;
         int ti = 6 * Resolution * z;

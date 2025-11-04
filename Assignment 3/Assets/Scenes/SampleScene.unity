@@ -531,9 +531,10 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 2dd7902c467c3bb4eb70072117ec5ef7, type: 2}
   - {fileID: 2100000, guid: f41044b5e87777349a19fd4fb77618ab, type: 2}
   _resolution: 4
-  _meshType: 6
-  _gizmoMode: 3
-  _materialMode: 0
+  _meshType: 7
+  _gizmoMode: 8
+  _materialMode: 3
+  _meshOptimizationMode: -1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ProceduralMesh.Streams
 {
-    public interface IMeshStreams
+    public interface IMeshStream
     {
         void Setup(Mesh.MeshData meshData, Bounds bounds, int vertexCount, int indexCount);
         void SetVertex(int index, Vertex vertex);
