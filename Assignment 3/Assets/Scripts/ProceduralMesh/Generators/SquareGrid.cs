@@ -28,7 +28,6 @@ public struct SquareGrid : IMeshGenerator
 			Vertex vertex = new Vertex();
 			vertex.normal.y = 1f;
 			vertex.tangent.xw = float2(1f, -1f);
-
 			vertex.position.x = xCoordinates.x;
 			vertex.position.z = zCoordinates.x;
 			streams.SetVertex(vi + 0, vertex);

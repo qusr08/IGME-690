@@ -18,12 +18,11 @@ public struct SharedSquareGrid : IMeshGenerator
 	public void Execute<S>(int z, S streams) where S : struct, IMeshStreams
 	{
 		int vi = (Resolution + 1) * z;
-		int ti = 2 * (Resolution + 1) * (z - 1);
+		int ti = 2 * Resolution * (z - 1);
 
 		Vertex vertex = new Vertex();
 		vertex.normal.y = 1f;
 		vertex.tangent.xw = float2(1f, -1f);
-
 		vertex.position.x = -0.5f;
 		vertex.position.z = (float)z / Resolution - 0.5f;
 		vertex.texCoord0.y = (float)z / Resolution;

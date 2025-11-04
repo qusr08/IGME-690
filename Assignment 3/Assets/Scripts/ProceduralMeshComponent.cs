@@ -5,45 +5,108 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class ProceduralMeshComponent : MonoBehaviour
 {
-	private static MeshJobScheduleDelegate[] _jobs =
-	{
-		MeshJob<SquareGrid, SingleStream>.ScheduleParallel,
-		MeshJob<SharedSquareGrid, SingleStream>.ScheduleParallel
-	};
+    private static readonly MeshJobScheduleDelegate[] _jobs =
+    {
+        MeshJob<SquareGrid, SingleStream>.ScheduleParallel,
+        MeshJob<SharedSquareGrid, SingleStream>.ScheduleParallel,
+        MeshJob<SharedTriangleGrid, SingleStream>.ScheduleParallel,
+        MeshJob<PointyHexagonGrid, SingleStream>.ScheduleParallel,
+        MeshJob<FlatHexagonGrid, SingleStream>.ScheduleParallel,
+        MeshJob<UVSphere, SingleStream>.ScheduleParallel
+    };
 
-	[SerializeField, Range(1, 50)] private int _resolution = 1;
-	[SerializeField] private MeshType _meshType;
+    [SerializeField] private Material[] _materials;
+    [Space]
+    [SerializeField, Range(1, 50)] private int _resolution = 1;
+    [SerializeField] private MeshType _meshType;
+    [SerializeField] private GizmoMode _gizmoMode;
+    [SerializeField] private MaterialMode _materialMode;
 
-	private Mesh _mesh;
+    private Mesh _mesh;
+    private Vector3[] _vertices;
+    private Vector3[] _normals;
+    private Vector4[] _tangents;
 
-	private void Awake()
-	{
-		_mesh = new Mesh
-		{
-			name = "Procedural Mesh"
-		};
+    private void Awake()
+    {
+        _mesh = new Mesh
+        {
+            name = "Procedural Mesh"
+        };
 
-		GetComponent<MeshFilter>().mesh = _mesh;
-	}
+        GetComponent<MeshFilter>().mesh = _mesh;
+    }
 
-	private void OnValidate()
-	{
-		enabled = true;
-	}
+    private void OnValidate()
+    {
+        enabled = true;
+    }
 
-	private void Update()
-	{
-		GenerateMesh();
-		enabled = false;
-	}
+    private void Update()
+    {
+        GenerateMesh();
+        enabled = false;
 
-	private void GenerateMesh()
-	{
-		Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(1);
-		Mesh.MeshData meshData = meshDataArray[0];
+        _vertices = null;
+        _normals = null;
+        _tangents = null;
 
-		_jobs[(int)_meshType](_mesh, meshData, _resolution, default).Complete();
+        GetComponent<MeshRenderer>().material = _materials[(int)_materialMode];
+    }
 
-		Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, _mesh);
-	}
+    private void OnDrawGizmos()
+    {
+        if (_gizmoMode == GizmoMode.Nothing || _mesh == null)
+        {
+            return;
+        }
+
+        bool drawVertices = (_gizmoMode & GizmoMode.Vertices) != 0;
+        bool drawNormals = (_gizmoMode & GizmoMode.Normals) != 0;
+        bool drawTangents = (_gizmoMode & GizmoMode.Tangents) != 0;
+
+        if (_vertices == null)
+        {
+            _vertices = _mesh.vertices;
+        }
+        if (drawNormals && _normals == null)
+        {
+            _normals = _mesh.normals;
+        }
+        if (drawTangents && _tangents == null)
+        {
+            _tangents = _mesh.tangents;
+        }
+
+        Transform t = transform;
+        for (int i = 0; i < _vertices.Length; i++)
+        {
+            Vector3 position = t.TransformPoint(_vertices[i]);
+            if (drawVertices)
+            {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawSphere(position, 0.02f);
+            }
+            if (drawNormals)
+            {
+                Gizmos.color = Color.green;
+                Gizmos.DrawRay(position, t.TransformDirection(_normals[i]) * 0.2f);
+            }
+            if (drawTangents)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawRay(position, t.TransformDirection(_tangents[i]) * 0.2f);
+            }
+        }
+    }
+
+    private void GenerateMesh()
+    {
+        Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(1);
+        Mesh.MeshData meshData = meshDataArray[0];
+
+        _jobs[(int)_meshType](_mesh, meshData, _resolution, default).Complete();
+
+        Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, _mesh);
+    }
 }

@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0.5, z: -2}
+  m_LocalRotation: {x: 0.38711333, y: 0, z: 0, w: 0.92203224}
+  m_LocalPosition: {x: 0, y: 0.7, z: -0.84}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 45.55, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -525,6 +525,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc8666c7378648e4ab591611300bb38c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _materials:
+  - {fileID: 2100000, guid: e62bc13f3dd84a742872db5cdd68c5c0, type: 2}
+  - {fileID: 2100000, guid: 5dbf512589b54054f868a3418557e25c, type: 2}
+  - {fileID: 2100000, guid: 2dd7902c467c3bb4eb70072117ec5ef7, type: 2}
+  - {fileID: 2100000, guid: f41044b5e87777349a19fd4fb77618ab, type: 2}
+  _resolution: 10
+  _meshType: 5
+  _gizmoMode: 3
+  _materialMode: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
