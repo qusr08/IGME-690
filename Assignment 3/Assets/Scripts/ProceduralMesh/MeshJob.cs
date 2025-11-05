@@ -12,7 +12,6 @@ namespace ProceduralMesh
 	[BurstCompile(FloatPrecision.Standard, FloatMode.Fast, CompileSynchronously = true)]
 	public struct MeshJob<G, S> : IJobFor where G : struct, IMeshGenerator where S : struct, IMeshStream
 	{
-
 		private G _generator;
 
 		[WriteOnly]

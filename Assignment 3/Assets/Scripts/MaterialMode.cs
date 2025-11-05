@@ -1,4 +1,4 @@
 public enum MaterialMode
 {
-    Flat, Ripple, LatLonMap, LatLonCubeMap
+    VertexColor, Flat, Ripple, LatLonMap, LatLonCubeMap
 }
