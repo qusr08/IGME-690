@@ -1,10 +1,10 @@
-using ProceduralMesh.Streams;
+using Procedural.Streams;
 using UnityEngine;
 using static Unity.Mathematics.math;
 
 // https://catlikecoding.com/unity/tutorials/procedural-meshes/modified-grid/
 
-namespace ProceduralMesh.Generators
+namespace Procedural.Generators
 {
     public struct SharedSquareGrid : IMeshGenerator
     {

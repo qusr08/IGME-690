@@ -1,22 +1,25 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace ProceduralMesh.Streams
+namespace Procedural.Streams
 {
-	public struct MultiStream : IMeshStream
+	public struct SingleStream : IMeshStream
 	{
-		[NativeDisableContainerSafetyRestriction]
-		NativeArray<float3> stream0, stream1;
+		[StructLayout(LayoutKind.Sequential)]
+		struct Stream0
+		{
+			public float3 position, normal;
+			public float4 tangent;
+			public float2 texCoord0;
+		}
 
 		[NativeDisableContainerSafetyRestriction]
-		NativeArray<float4> stream2;
-
-		[NativeDisableContainerSafetyRestriction]
-		NativeArray<float2> stream3;
+		NativeArray<Stream0> stream0;
 
 		[NativeDisableContainerSafetyRestriction]
 		NativeArray<TriangleUInt16> triangles;
@@ -28,13 +31,13 @@ namespace ProceduralMesh.Streams
 			);
 			descriptor[0] = new VertexAttributeDescriptor(dimension: 3);
 			descriptor[1] = new VertexAttributeDescriptor(
-				VertexAttribute.Normal, dimension: 3, stream: 1
+				VertexAttribute.Normal, dimension: 3
 			);
 			descriptor[2] = new VertexAttributeDescriptor(
-				VertexAttribute.Tangent, dimension: 4, stream: 2
+				VertexAttribute.Tangent, dimension: 4
 			);
 			descriptor[3] = new VertexAttributeDescriptor(
-				VertexAttribute.TexCoord0, dimension: 2, stream: 3
+				VertexAttribute.TexCoord0, dimension: 2
 			);
 			meshData.SetVertexBufferParams(vertexCount, descriptor);
 			descriptor.Dispose();
@@ -48,20 +51,20 @@ namespace ProceduralMesh.Streams
 				vertexCount = vertexCount
 			}, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
 
-			stream0 = meshData.GetVertexData<float3>();
-			stream1 = meshData.GetVertexData<float3>(1);
-			stream2 = meshData.GetVertexData<float4>(2);
-			stream3 = meshData.GetVertexData<float2>(3);
+			stream0 = meshData.GetVertexData<Stream0>();
 			triangles = meshData.GetIndexData<ushort>().Reinterpret<TriangleUInt16>(2);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void SetVertex(int index, Vertex vertex)
+		public void SetVertex(int index, Vertex data)
 		{
-			stream0[index] = vertex.position;
-			stream1[index] = vertex.normal;
-			stream2[index] = vertex.tangent;
-			stream3[index] = vertex.texCoord0;
+			stream0[index] = new Stream0
+			{
+				position = data.position,
+				normal = data.normal,
+				tangent = data.tangent,
+				texCoord0 = data.texCoord0
+			};
 		}
 
 		public void SetTriangle(int index, int3 triangle)

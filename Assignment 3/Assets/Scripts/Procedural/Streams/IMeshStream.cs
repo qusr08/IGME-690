@@ -1,7 +1,7 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace ProceduralMesh.Streams
+namespace Procedural.Streams
 {
     public interface IMeshStream
     {

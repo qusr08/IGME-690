@@ -1,11 +1,11 @@
-using ProceduralMesh.Streams;
+using Procedural.Streams;
 using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
 
 // https://catlikecoding.com/unity/tutorials/procedural-meshes/square-grid/
 
-namespace ProceduralMesh.Generators
+namespace Procedural.Generators
 {
     public struct SquareGrid : IMeshGenerator
     {

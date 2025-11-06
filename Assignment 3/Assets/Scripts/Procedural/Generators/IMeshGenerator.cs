@@ -1,7 +1,7 @@
-using ProceduralMesh.Streams;
+using Procedural.Streams;
 using UnityEngine;
 
-namespace ProceduralMesh.Generators
+namespace Procedural.Generators
 {
     public interface IMeshGenerator
 	{

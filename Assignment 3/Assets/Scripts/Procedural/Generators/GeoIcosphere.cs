@@ -1,18 +1,20 @@
-using ProceduralMesh.Streams;
+using Procedural.Streams;
 using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
+using quaternion = Unity.Mathematics.quaternion;
 
 // https://catlikecoding.com/unity/tutorials/procedural-meshes/icosphere/
 
-namespace ProceduralMesh.Generators
+namespace Procedural.Generators
 {
-    public struct Icosphere : IMeshGenerator
+    public struct GeoIcosphere : IMeshGenerator
     {
         private struct Strip
         {
             public int id;
             public float3 lowLeftCorner, lowRightCorner, highLeftCorner, highRightCorner;
+            public float3 bottomLeftAxis, bottomRightAxis, midLeftAxis, midCenterAxis, midRightAxis, topLeftAxis, topRightAxis;
         }
 
         public int Resolution { get; set; }
@@ -21,6 +23,7 @@ namespace ProceduralMesh.Generators
         public int IndexCount => 6 * 5 * ResolutionV * Resolution;
         public int JobLength => 5 * Resolution;
         public Bounds Bounds => new Bounds(Vector3.zero, new Vector3(2f, 2f, 2f));
+        public float EdgeRotationAngle => acos(dot(up(), GetCorner(0, 1)));
 
         public void Execute<S>(int i, S streams) where S : struct, IMeshStream
         {
@@ -44,23 +47,6 @@ namespace ProceduralMesh.Generators
 
             u++;
 
-            float3 columnBottomDir = strip.lowRightCorner - down();
-            float3 columnBottomStart = down() + columnBottomDir * u / Resolution;
-            float3 columnBottomEnd = strip.lowLeftCorner + columnBottomDir * u / Resolution;
-
-            float3 columnLowDir = strip.highRightCorner - strip.lowLeftCorner;
-            float3 columnLowStart =
-                strip.lowRightCorner + columnLowDir * ((float)u / Resolution - 1f);
-            float3 columnLowEnd = strip.lowLeftCorner + columnLowDir * u / Resolution;
-
-            float3 columnHighDir = strip.highRightCorner - strip.lowLeftCorner;
-            float3 columnHighStart = strip.lowLeftCorner + columnHighDir * u / Resolution;
-            float3 columnHighEnd = strip.highLeftCorner + columnHighDir * u / Resolution;
-
-            float3 columnTopDir = up() - strip.highLeftCorner;
-            float3 columnTopStart = strip.highRightCorner + columnTopDir * ((float)u / Resolution - 1f);
-            float3 columnTopEnd = strip.highLeftCorner + columnTopDir * u / Resolution;
-
             Vertex vertex = new Vertex();
             if (i == 0)
             {
@@ -69,29 +55,55 @@ namespace ProceduralMesh.Generators
                 vertex.position = up();
                 streams.SetVertex(1, vertex);
             }
-            vertex.position = normalize(columnBottomStart);
+            vertex.position = mul(quaternion.AxisAngle(strip.bottomRightAxis, EdgeRotationAngle * u / Resolution), down());
             streams.SetVertex(vi, vertex);
             vi++;
 
             for (int v = 1; v < ResolutionV; v++, vi++, ti += 2)
             {
+                float h = u + v;
+                float3 leftAxis, rightAxis, leftStart, rightStart;
+                float edgeAngleScale, faceAngleScale;
+
                 if (v <= Resolution - u)
                 {
-                    vertex.position = lerp(columnBottomStart, columnBottomEnd, (float)v / Resolution);
+                    leftAxis = strip.bottomLeftAxis;
+                    rightAxis = strip.bottomRightAxis;
+                    leftStart = rightStart = down();
+                    edgeAngleScale = h / Resolution;
+                    faceAngleScale = v / h;
                 }
                 else if (v < Resolution)
                 {
-                    vertex.position = lerp(columnLowStart, columnLowEnd, (float)v / Resolution);
+                    leftAxis = strip.midCenterAxis;
+                    rightAxis = strip.midRightAxis;
+                    leftStart = strip.lowLeftCorner;
+                    rightStart = strip.lowRightCorner;
+                    edgeAngleScale = h / Resolution - 1f;
+                    faceAngleScale = (Resolution - u) / (ResolutionV - h);
                 }
                 else if (v <= ResolutionV - u)
                 {
-                    vertex.position = lerp(columnHighStart, columnHighEnd, (float)v / Resolution - 1f);
+                    leftAxis = strip.midLeftAxis;
+                    rightAxis = strip.midCenterAxis;
+                    leftStart = rightStart = strip.lowLeftCorner;
+                    edgeAngleScale = h / Resolution - 1f;
+                    faceAngleScale = (v - Resolution) / (h - Resolution);
                 }
                 else
                 {
-                    vertex.position = lerp(columnTopStart, columnTopEnd, (float)v / Resolution - 1f);
+                    leftAxis = strip.topLeftAxis;
+                    rightAxis = strip.topRightAxis;
+                    leftStart = strip.highLeftCorner;
+                    rightStart = strip.highRightCorner;
+                    edgeAngleScale = h / Resolution - 2f;
+                    faceAngleScale = (Resolution - u) / (3f * Resolution - h);
                 }
-                vertex.position = normalize(vertex.position);
+                float3 pLeft = mul(quaternion.AxisAngle(leftAxis, EdgeRotationAngle * edgeAngleScale), leftStart);
+                float3 pRight = mul(quaternion.AxisAngle(rightAxis, EdgeRotationAngle * edgeAngleScale), rightStart);
+                float3 axis = normalize(cross(pRight, pLeft));
+                float angle = acos(dot(pRight, pLeft)) * faceAngleScale;
+                vertex.position = mul(quaternion.AxisAngle(axis, angle), pRight);
                 streams.SetVertex(vi, vertex);
 
                 streams.SetTriangle(ti + 0, quad.xyz);
@@ -125,7 +137,7 @@ namespace ProceduralMesh.Generators
 
         private static Strip CreateStrip(int id)
         {
-            return new Strip
+            Strip s = new Strip
             {
                 id = id,
                 lowLeftCorner = GetCorner(2 * id, -1),
@@ -133,6 +145,14 @@ namespace ProceduralMesh.Generators
                 highLeftCorner = GetCorner(id == 0 ? 9 : 2 * id - 1, 1),
                 highRightCorner = GetCorner(2 * id + 1, 1)
             };
+            s.bottomLeftAxis = normalize(cross(down(), s.lowLeftCorner));
+            s.bottomRightAxis = normalize(cross(down(), s.lowRightCorner));
+            s.midLeftAxis = normalize(cross(s.lowLeftCorner, s.highLeftCorner));
+            s.midCenterAxis = normalize(cross(s.lowLeftCorner, s.highRightCorner));
+            s.midRightAxis = normalize(cross(s.lowRightCorner, s.highRightCorner));
+            s.topLeftAxis = normalize(cross(s.highLeftCorner, up()));
+            s.topRightAxis = normalize(cross(s.highRightCorner, up()));
+            return s;
         }
 
         private static float3 GetCorner(int id, int ySign)

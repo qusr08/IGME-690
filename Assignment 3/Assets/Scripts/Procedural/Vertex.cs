@@ -1,6 +1,6 @@
 using Unity.Mathematics;
 
-namespace ProceduralMesh
+namespace Procedural
 {
     public struct Vertex
     {

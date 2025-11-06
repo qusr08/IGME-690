@@ -1,11 +1,11 @@
-using ProceduralMesh.Generators;
-using ProceduralMesh.Streams;
+using Procedural.Generators;
+using Procedural.Streams;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
-namespace ProceduralMesh
+namespace Procedural
 {
 	public delegate JobHandle MeshJobScheduleDelegate(Mesh mesh, Mesh.MeshData meshData, int resolution, JobHandle dependency);
 
