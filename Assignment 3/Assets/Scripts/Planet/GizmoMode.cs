@@ -1,4 +1,9 @@
-using System.Collections.Generic;
+
+using System;
+using Unity.Collections;
+using UnityEditor.MemoryProfiler;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Planet
 {
@@ -27,6 +32,8 @@ namespace Planet
     public struct EdgeNode
     {
         public int V1, V2;
+        public TriangleNode? N1, N2;
+        private int _neighborCount;
 
         public EdgeNode(int v1, int v2)
         {
@@ -41,30 +48,94 @@ namespace Planet
                 V1 = v2;
                 V2 = v1;
             }
+
+            N1 = null;
+            N2 = null;
+            _neighborCount = 0;
         }
 
-        public override string ToString()
+        public void AddNeighbor(TriangleNode neighbor)
         {
-            return $"({V1}, {V2})";
+            if (N1 == neighbor || N2 == neighbor)
+            {
+                return;
+            }
+
+            if (N1 == null)
+            {
+                N1 = neighbor;
+                _neighborCount++;
+            }
+            else if (N2 == null)
+            {
+                N2 = neighbor;
+                neighbor.AddConnection(((TriangleNode)N1).Index);
+                ((TriangleNode)N1).AddConnection(neighbor.Index);
+                _neighborCount++;
+            }
         }
+
+        public override string ToString() => $"({V1}, {V2})";
     }
 
     public struct TriangleNode
     {
         public int V1, V2, V3;
-        public List<TriangleNode> Connections;
+        public int Index;
+        public int ConnectionIndex1, ConnectionIndex2, ConnectionIndex3;
+        private int _connectionCount;
 
-        public TriangleNode(int v1, int v2, int v3)
+        public TriangleNode(int v1, int v2, int v3, int index)
         {
             V1 = v1;
             V2 = v2;
             V3 = v3;
-            Connections = new List<TriangleNode>();
+            Index = index;
+            ConnectionIndex1 = -1;
+            ConnectionIndex2 = -1;
+            ConnectionIndex3 = -1;
+            _connectionCount = 0;
         }
 
-        public override string ToString()
+        public void AddConnection(int index)
         {
-            return $"({V1}, {V2}, {V3})";
+            if (ConnectionIndex1 == index || ConnectionIndex2 == index || ConnectionIndex3 == index || index == Index)
+            {
+                return;
+            }
+
+            if (ConnectionIndex1 == -1)
+            {
+                ConnectionIndex1 = index;
+                _connectionCount++;
+            }
+            else if (ConnectionIndex2 == -1)
+            {
+                ConnectionIndex2 = index;
+                _connectionCount++;
+            }
+            else if (ConnectionIndex3 == -1)
+            {
+                ConnectionIndex3 = index;
+                _connectionCount++;
+            }
         }
+
+        public int SelectRandomConnection()
+        {
+            return Random.Range(0, _connectionCount) switch
+            {
+                0 => ConnectionIndex1,
+                1 => ConnectionIndex2,
+                _ => ConnectionIndex3
+            };
+        }
+
+        public static bool operator ==(TriangleNode left, TriangleNode right) => left.Equals(right);
+        public static bool operator !=(TriangleNode left, TriangleNode right) => !(left == right);
+
+        public override string ToString() => $"({V1}, {V2}, {V3})";
+        public override bool Equals(object obj) => obj is TriangleNode node && V1 == node.V1 && V2 == node.V2 && V3 == node.V3;
+        public override int GetHashCode() => HashCode.Combine(V1, V2, V3);
     }
 }

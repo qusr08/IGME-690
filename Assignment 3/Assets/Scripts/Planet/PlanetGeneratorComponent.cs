@@ -1,9 +1,12 @@
-using Procedural;
 using Procedural.Generators;
+using Procedural.Jobs;
 using Procedural.Streams;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
+using static UnityEngine.InputManagerEntry;
 
 namespace Planet
 {
@@ -45,7 +48,7 @@ namespace Planet
         private TriangleNode currentNode;
         private float moveTimer = 0f;
         private float moveSpeed = 0.1f;
-        private List<TriangleNode> _triangleNodes;
+        private NativeArray<TriangleNode> _triangleNodes;
 
         private void Awake()
         {
@@ -59,7 +62,10 @@ namespace Planet
 
         private void OnValidate()
         {
-            _isDirty = true;
+            if (Application.isPlaying)
+            {
+                _isDirty = true;
+            }
         }
 
         private void Update()
@@ -79,7 +85,7 @@ namespace Planet
             if (moveTimer >= moveSpeed)
             {
                 moveTimer -= moveSpeed;
-                currentNode = currentNode.Connections[Random.Range(0, currentNode.Connections.Count)];
+                currentNode = _triangleNodes[currentNode.SelectRandomConnection()];
 
                 Color32[] color32s = new Color32[_mesh.vertices.Length];
                 for (int i = 0; i < color32s.Length; i++)
@@ -176,8 +182,11 @@ namespace Planet
 
             Mesh.MeshDataArray meshDataArray = Mesh.AllocateWritableMeshData(1);
             Mesh.MeshData meshData = meshDataArray[0];
-
-            _meshJobs[(int)_meshType](_mesh, meshData, _resolution, default).Complete();
+            JobHandle meshJobHandle = _meshJobs[(int)_meshType](_mesh, meshData, _resolution, default);
+            JobHandle gridJobHandle = GridJob.Schedule(_mesh, meshJobHandle, out GridJob gridJob);
+            gridJobHandle.Complete();
+            Debug.Log("End of job: " + gridJob.TriangleNodes.IsCreated);
+            currentNode = gridJob.TriangleNodes[0];
 
             Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, _mesh);
 
@@ -200,46 +209,7 @@ namespace Planet
             _triangles = null;
             GetComponent<MeshRenderer>().material = _materials[(int)_materialMode];
 
-            _triangleNodes = CalculateTriangleNeighbors(_mesh);
-            currentNode = _triangleNodes[0];
-
             _isGeneratingMesh = false;
-        }
-
-        private List<TriangleNode> CalculateTriangleNeighbors(Mesh mesh)
-        {
-            List<TriangleNode> triangles = new List<TriangleNode>();
-            Dictionary<EdgeNode, List<TriangleNode>> edges = new Dictionary<EdgeNode, List<TriangleNode>>();
-
-            for (int i = 0; i < mesh.triangles.Length; i += 3)
-            {
-                int index1 = mesh.triangles[i];
-                int index2 = mesh.triangles[i + 1];
-                int index3 = mesh.triangles[i + 2];
-
-                TriangleNode triangle = new TriangleNode(index1, index2, index3);
-                triangles.Add(triangle);
-
-                TryAddConnection(ref edges, new EdgeNode(index1, index2), triangle);
-                TryAddConnection(ref edges, new EdgeNode(index2, index3), triangle);
-                TryAddConnection(ref edges, new EdgeNode(index3, index1), triangle);
-            }
-
-            return triangles;
-        }
-
-        private void TryAddConnection(ref Dictionary<EdgeNode, List<TriangleNode>> edges, EdgeNode edge, TriangleNode triangle)
-        {
-            if (edges.TryGetValue(edge, out List<TriangleNode> connected))
-            {
-                connected[0].Connections.Add(triangle);
-                triangle.Connections.Add(connected[0]);
-                connected.Add(triangle);
-            }
-            else
-            {
-                edges.Add(edge, new List<TriangleNode>() { triangle });
-            }
         }
 
         public void SetMeshColors(Color[] colors)
