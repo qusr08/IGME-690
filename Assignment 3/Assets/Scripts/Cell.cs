@@ -1,71 +1,78 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public enum CellType
 {
-    Grass, Road, Tree, House
+	None, Grass, Road, Tree, House
 }
 
 [Serializable]
 public struct CellData
 {
-    public Color Color;
-    public float SpreadChance;
-    public float DecayChance;
-
-    public CellData(Color color, float spreadChance, float decayChance)
-    {
-        Color = color;
-        SpreadChance = spreadChance;
-        DecayChance = decayChance;
-    }
+	public Color Color;
+	[Space]
+	[Range(0f, 1f)] public float SpreadChance;
+	public CellType[] SpreadAs;
+	public CellType[] SpreadIgnoreList;
+	[Space]
+	[Range(0f, 1f)] public float DecayChance;
+	public CellType[] ValidNeighbors;
+	[Range(0, 8)] public int MaxLikeNeighbors;
+	[Range(0, 8)] public int MinLikeNeighbors;
 }
 
 public class Cell : MonoBehaviour
 {
-    [SerializeField] private MeshRenderer meshRenderer;
+	[SerializeField, Range(0f, 1f)] private float colorVariation;
 
-    public CellType CellType { get; private set; }
+	public CellType CellType { get; private set; } = CellType.None;
+	public CellData CellData { get; private set; }
 
-    private CellData cellData;
-    private Material material;
+	private Material material;
 
-    private void Awake()
-    {
-        material = new Material(meshRenderer.material);
-        meshRenderer.material = material;
-    }
+	private void Awake()
+	{
+		MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+		material = new Material(meshRenderer.material);
+		meshRenderer.material = material;
+	}
 
-    public bool CheckSpread(out List<Vector2Int> spreadDirections)
-    {
-        spreadDirections = new List<Vector2Int>()
-        {
-            Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left
-        };
+	public bool CheckSpread(out Vector2Int spreadDirection)
+	{
+		if (Random.Range(0f, 1f) < CellData.SpreadChance)
+		{
+			spreadDirection = Utils.Choose(Utils.CardinalDirections);
+			return true;
+		}
 
-        for (int i = spreadDirections.Count - 1; i >= 0; i--)
-        {
-            if (Random.Range(0f, 1f) >= cellData.SpreadChance)
-            {
-                spreadDirections.RemoveAt(i);
-            }
-        }
+		spreadDirection = Vector2Int.zero;
+		return false;
+	}
 
-        return spreadDirections.Count > 0;
-    }
+	public bool CheckDecay(int neighborCount)
+	{
+		if (neighborCount < CellData.MinLikeNeighbors || neighborCount > CellData.MaxLikeNeighbors)
+		{
+			return true;
+		}
 
-    public bool CheckDecay()
-    {
-        return Random.Range(0f, 1f) < cellData.DecayChance;
-    }
+		return Random.Range(0f, 1f) < CellData.DecayChance;
+	}
 
-    public void Set(CellType cellType, CellData cellData)
-    {
-        CellType = cellType;
-        this.cellData = cellData;
+	public void Set(CellType cellType, CellData cellData)
+	{
+		if (CellType == cellType)
+		{
+			return;
+		}
 
-        material.color = cellData.Color;
-    }
+		CellType = cellType;
+		CellData = cellData;
+
+		Color.RGBToHSV(cellData.Color, out float h, out float s, out float v);
+		float newS = Mathf.Clamp01(Random.Range(-colorVariation, colorVariation) + s);
+		float newV = Mathf.Clamp01(Random.Range(-colorVariation, colorVariation) + v);
+		material.color = Color.HSVToRGB(h, newS, newV);
+	}
 }

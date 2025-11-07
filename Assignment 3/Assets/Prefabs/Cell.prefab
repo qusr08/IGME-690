@@ -121,5 +121,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c189e14f635ba7419e452e01585fd2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshRenderer: {fileID: 6350421693975740333}
-  material: {fileID: 2100000, guid: 11eeff5c2c3f51540886fff24d002941, type: 2}
+  colorVariation: 0.05
