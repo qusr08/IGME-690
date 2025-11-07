@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Tree Cell
   m_EditorClassIdentifier: 
   Color: {r: 0.039215688, g: 0.3019608, b: 0.03137255, a: 1}
-  SpreadChance: 0.7
+  SpreadChance: 0.72
   SpreadAs: 03000000
   SpreadIgnoreList: 0100000002000000
   DecayChance: 0.2

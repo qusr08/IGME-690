@@ -16,7 +16,7 @@ MonoBehaviour:
   SpreadChance: 0.1
   SpreadAs: 0200000003000000
   SpreadIgnoreList: 01000000
-  DecayChance: 0.015
+  DecayChance: 0.0125
   ValidNeighbors: 0200000004000000
   MaxLikeNeighbors: 8
   MinLikeNeighbors: 0

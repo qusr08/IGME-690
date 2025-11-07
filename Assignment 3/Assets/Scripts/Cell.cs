@@ -2,11 +2,6 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public enum CellType
-{
-	None, Grass, Road, Tree, House
-}
-
 public class Cell : MonoBehaviour
 {
 	[SerializeField, Range(0f, 1f)] private float colorVariation;

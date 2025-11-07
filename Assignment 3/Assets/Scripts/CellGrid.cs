@@ -6,10 +6,8 @@ public class CellGrid : MonoBehaviour
 	[SerializeField] private GameObject cellPrefab;
 	[SerializeField] private CellDictionary cellDictionary;
 	[Space]
-	[SerializeField, Range(3f, 50f)] private int width;
-	[SerializeField, Range(3f, 50f)] private int height;
+	[SerializeField, Range(10f, 100f)] public int Size;
 	[SerializeField, Range(0.01f, 1f)] private float updateSpeed;
-	[SerializeField, Range(1f, 10f)] private float startingAreaRadius;
 
 	private Cell[,] cellObjects;
 	private CellType[,] cellBuffer;
@@ -35,38 +33,39 @@ public class CellGrid : MonoBehaviour
 	private void GenerateCells()
 	{
 		// Initialize arrays and position the cell grid
-		cellBuffer = new CellType[width, height];
-		cellObjects = new Cell[width, height];
-		transform.position = new Vector3(-width / 2f + 0.5f, 0f, -height / 2f + 0.5f);
+		cellBuffer = new CellType[Size, Size];
+		cellObjects = new Cell[Size, Size];
+		transform.position = new Vector3(-Size / 2f + 0.5f, 0f, -Size / 2f + 0.5f);
 
 		// Generate starting locations for trees
 		List<Vector2Int> treeCenters = new List<Vector2Int>();
-		for (int i = 0; i < width * height / 50f; i++)
+		for (int i = 0; i < Size * Size / 50; i++)
 		{
-			treeCenters.Add(new Vector2Int(Random.Range(0, width), Random.Range(0, height)));
+			treeCenters.Add(new Vector2Int(Random.Range(0, Size), Random.Range(0, Size)));
 		}
 
 		// Generate starting location for the roads
 		List<Vector2Int> roadCenters = new List<Vector2Int>();
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < Size / 10; i++)
 		{
-			roadCenters.Add(new Vector2Int(Random.Range(0, width), Random.Range(0, height)));
+			roadCenters.Add(new Vector2Int(Random.Range(0, Size), Random.Range(0, Size)));
 		}
 
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < Size; x++)
 		{
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < Size; y++)
 			{
 				GameObject cellObject = Instantiate(cellPrefab, transform);
 				cellObject.transform.localPosition = new Vector3(x, 0, y);
 				cellObjects[x, y] = cellObject.GetComponent<Cell>();
 
 				Vector2Int cellPosition = new Vector2Int(x, y);
+				float radius = Size / 10;
 				cellBuffer[x, y] = CellType.None;
 
 				for (int k = 0; k < roadCenters.Count; k++)
 				{
-					if (Vector2Int.Distance(roadCenters[k], cellPosition) <= startingAreaRadius)
+					if (Vector2Int.Distance(roadCenters[k], cellPosition) <= radius)
 					{
 						cellBuffer[x, y] = CellType.Road;
 						break;
@@ -80,7 +79,7 @@ public class CellGrid : MonoBehaviour
 
 				for (int k = 0; k < treeCenters.Count; k++)
 				{
-					if (Vector2Int.Distance(treeCenters[k], cellPosition) <= startingAreaRadius)
+					if (Vector2Int.Distance(treeCenters[k], cellPosition) <= radius)
 					{
 						cellBuffer[x, y] = CellType.Tree;
 						break;
@@ -99,9 +98,9 @@ public class CellGrid : MonoBehaviour
 
 	private void UpdateCells()
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < Size; x++)
 		{
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < Size; y++)
 			{
 				if (cellObjects[x, y].CheckDecay(GetLikeNeighbors(x, y)))
 				{
@@ -140,9 +139,9 @@ public class CellGrid : MonoBehaviour
 
 	private void ApplyBuffer()
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < Size; x++)
 		{
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < Size; y++)
 			{
 				CellType cellType = cellBuffer[x, y];
 				cellObjects[x, y].Set(cellType, cellDictionary[cellType]);
@@ -152,7 +151,7 @@ public class CellGrid : MonoBehaviour
 
 	private bool IsValidPosition(int x, int y, CellType[] validCellTypeList = null)
 	{
-		if (x < 0 || x >= width || y < 0 || y >= height)
+		if (x < 0 || x >= Size || y < 0 || y >= Size)
 		{
 			return false;
 		}
