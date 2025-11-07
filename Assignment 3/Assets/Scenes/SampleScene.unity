@@ -157,7 +157,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e26079ded865a914f8efb4aa1da8475e, type: 2}
     - {fileID: 11400000, guid: 42eb6363eb66ba04596afbfe5918ac37, type: 2}
   Size: 100
-  updateSpeed: 0.01
+  updateSpeed: 0.407
 --- !u!4 &208276618
 Transform:
   m_ObjectHideFlags: 0

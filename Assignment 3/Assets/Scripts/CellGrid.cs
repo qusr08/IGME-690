@@ -4,7 +4,7 @@ using UnityEngine;
 public class CellGrid : MonoBehaviour
 {
 	[SerializeField] private GameObject cellPrefab;
-	[SerializeField] private CellDictionary cellDictionary;
+	[SerializeField] private CellDataDictionary cellDictionary;
 	[Space]
 	[SerializeField, Range(10f, 100f)] public int Size;
 	[SerializeField, Range(0.01f, 1f)] private float updateSpeed;

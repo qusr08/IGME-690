@@ -5,7 +5,8 @@ using UnityEditor;
 using System.Reflection;
 using System;
 
-[CustomPropertyDrawer(typeof(CellDictionary))]
+[CustomPropertyDrawer(typeof(CellDataDictionary))]
+[CustomPropertyDrawer(typeof(CellFeatureDictionary))]
 public class AnySerializableDictionaryPropertyDrawer : SerializableDictionaryPropertyDrawer { }
 
 public class SerializableDictionaryPropertyDrawer : PropertyDrawer

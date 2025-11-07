@@ -4,6 +4,7 @@ using Random = UnityEngine.Random;
 
 public class Cell : MonoBehaviour
 {
+	[SerializeField] private CellFeatureDictionary features;
 	[SerializeField, Range(0f, 1f)] private float colorVariation;
 
 	public CellType CellType { get; private set; } = CellType.None;
@@ -47,8 +48,18 @@ public class Cell : MonoBehaviour
 			return;
 		}
 
+		if (features.TryGetValue(CellType, out GameObject oldFeature))
+		{
+			oldFeature.SetActive(false);
+		}
+
 		CellType = cellType;
 		CellData = cellData;
+
+		if (features.TryGetValue(CellType, out GameObject newFeature))
+		{
+			newFeature.SetActive(true);
+		}
 
 		Color.RGBToHSV(cellData.Color, out float h, out float s, out float v);
 		float newS = Mathf.Clamp01(Random.Range(-colorVariation, colorVariation) + s);
