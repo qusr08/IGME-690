@@ -15,10 +15,7 @@ public class OrbitCamera : MonoBehaviour
 	private void Awake()
 	{
 		cellGrid = FindFirstObjectByType<CellGrid>();
-		distance = Mathf.Cos(cameraTiltAngle * Mathf.Deg2Rad) * cellGrid.Size * padding;
-		height = Mathf.Sin(cameraTiltAngle * Mathf.Deg2Rad) * cellGrid.Size * padding;
 		origin = new Vector3(0f, -cellGrid.Size / 5f, 0f);
-		angle = 0f;
 	}
 
 	private void Update()
@@ -29,6 +26,8 @@ public class OrbitCamera : MonoBehaviour
 			angle -= Mathf.PI * 2f;
 		}
 
+		distance = Mathf.Cos(cameraTiltAngle * Mathf.Deg2Rad) * cellGrid.Size * padding;
+		height = Mathf.Sin(cameraTiltAngle * Mathf.Deg2Rad) * cellGrid.Size * padding;
 		transform.position = origin + new Vector3(Mathf.Cos(angle) * distance, height, Mathf.Sin(angle) * distance);
 		transform.LookAt(origin);
 	}

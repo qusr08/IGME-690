@@ -8,6 +8,7 @@ public class CellGrid : MonoBehaviour
 	[Space]
 	[SerializeField, Range(10f, 100f)] public int Size;
 	[SerializeField, Range(0.01f, 1f)] private float updateSpeed;
+	[SerializeField] private bool isPaused;
 
 	private Cell[,] cellObjects;
 	private CellType[,] cellBuffer;
@@ -21,6 +22,11 @@ public class CellGrid : MonoBehaviour
 
 	private void Update()
 	{
+		if (isPaused)
+		{
+			return;
+		}
+
 		updateTimer += Time.deltaTime;
 		if (updateTimer >= updateSpeed)
 		{
@@ -58,25 +64,18 @@ public class CellGrid : MonoBehaviour
 				GameObject cellObject = Instantiate(cellPrefab, transform);
 				cellObject.transform.localPosition = new Vector3(x, 0, y);
 				cellObjects[x, y] = cellObject.GetComponent<Cell>();
+				cellBuffer[x, y] = CellType.Grass;
 
-				Vector2Int cellPosition = new Vector2Int(x, y);
-				float radius = Size / 10;
-				cellBuffer[x, y] = CellType.None;
-
-				for (int k = 0; k < roadCenters.Count; k++)
-				{
-					if (Vector2Int.Distance(roadCenters[k], cellPosition) <= radius)
-					{
-						cellBuffer[x, y] = CellType.Road;
-						break;
-					}
-				}
-
-				if (cellBuffer[x, y] != CellType.None)
+				// Random chance to just skip and set the cell to grass
+				if (Random.Range(0f, 1f) < 0.1f)
 				{
 					continue;
 				}
 
+				Vector2Int cellPosition = new Vector2Int(x, y);
+				float radius = Size / 10;
+
+				// Check for tree areas
 				for (int k = 0; k < treeCenters.Count; k++)
 				{
 					if (Vector2Int.Distance(treeCenters[k], cellPosition) <= radius)
@@ -86,12 +85,15 @@ public class CellGrid : MonoBehaviour
 					}
 				}
 
-				if (cellBuffer[x, y] != CellType.None)
+				// Check for road areas
+				for (int k = 0; k < roadCenters.Count; k++)
 				{
-					continue;
+					if (Vector2Int.Distance(roadCenters[k], cellPosition) <= radius)
+					{
+						cellBuffer[x, y] = CellType.Road;
+						break;
+					}
 				}
-
-				cellBuffer[x, y] = CellType.Grass;
 			}
 		}
 	}
@@ -102,6 +104,8 @@ public class CellGrid : MonoBehaviour
 		{
 			for (int y = 0; y < Size; y++)
 			{
+				// Try to decay the cell first
+				// If that fails, try to spread the tile
 				if (cellObjects[x, y].CheckDecay(GetLikeNeighbors(x, y)))
 				{
 					cellBuffer[x, y] = CellType.Grass;
@@ -111,6 +115,7 @@ public class CellGrid : MonoBehaviour
 					int i = x + spreadDirection.x;
 					int j = y + spreadDirection.y;
 
+					// Make sure the cell can spread to the cell
 					if (IsValidPosition(i, j, cellObjects[x, y].CellData.SpreadIgnoreList))
 					{
 						cellBuffer[i, j] = Utils.Choose(cellObjects[x, y].CellData.SpreadAs);
@@ -125,6 +130,7 @@ public class CellGrid : MonoBehaviour
 		int count = 0;
 		CellType cellType = cellObjects[x, y].CellType;
 
+		// Count all of the neighbors around a specific position that match the valid neighbors of the cell
 		for (int i = 0; i < Utils.CardinalDirections.Length; i++)
 		{
 			Vector2Int position = new Vector2Int(x, y) + Utils.CardinalDirections[i];
@@ -139,6 +145,7 @@ public class CellGrid : MonoBehaviour
 
 	private void ApplyBuffer()
 	{
+		// Apply all the changes in the buffer to the cell objects to have the changes show
 		for (int x = 0; x < Size; x++)
 		{
 			for (int y = 0; y < Size; y++)
