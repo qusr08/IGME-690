@@ -86,9 +86,9 @@ public class IcosphereMesh : MonoBehaviour
 			normals[i * 3 + 1] = _generator.Vertices[triangle.B];
 			normals[i * 3 + 2] = _generator.Vertices[triangle.C];
 
-			colors32[i * 3 + 0] = _materialInstance.color;
-			colors32[i * 3 + 1] = _materialInstance.color;
-			colors32[i * 3 + 2] = _materialInstance.color;
+			colors32[i * 3 + 0] = Color.cyan;
+			colors32[i * 3 + 1] = Color.cyan;
+			colors32[i * 3 + 2] = Color.cyan;
 		}
 
 		// Save the mesh data so it can be displayed on the mesh
