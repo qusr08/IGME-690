@@ -11,11 +11,12 @@ public sealed class IcosphereGenerator
 
 	public IcosphereGenerator() { }
 
-	public void Generate (int resolution)
+	public void Generate(int resolution, float frequency, float range)
 	{
 		CreateIcosahedron();
 		Subdivide(resolution);
 		CalculateTriangleNeighbors();
+		RandomizeVertexHeight(frequency, range);
 	}
 
 	private void CreateIcosahedron()
@@ -144,6 +145,17 @@ public sealed class IcosphereGenerator
 		else
 		{
 			_edgeCache.Add(edge, triangle);
+		}
+	}
+
+	private void RandomizeVertexHeight(float frequency, float range)
+	{
+		for (int i = 0; i < Vertices.Count; i++)
+		{
+			// Adjust the distance from the center of the planet of each vertex
+			float noiseValue = PerlinNoise3D.PerlinNoise(Vertices[i], frequency);
+			float adjustedValue = Mathf.Max(0f, (noiseValue * range)) + 1f;
+			Vertices[i] *= adjustedValue;
 		}
 	}
 }
