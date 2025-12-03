@@ -151,6 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshFilter: {fileID: 82698340}
+  material: {fileID: 2100000, guid: ba359ea7e80fb07498e54333dc643b55, type: 2}
   resolution: 1
 --- !u!23 &82698339
 MeshRenderer:
