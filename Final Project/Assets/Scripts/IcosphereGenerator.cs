@@ -150,10 +150,12 @@ public sealed class IcosphereGenerator
 
 	private void RandomizeVertexHeight(float frequency, float range)
 	{
+		Vector3 offset = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+
 		for (int i = 0; i < Vertices.Count; i++)
 		{
 			// Adjust the distance from the center of the planet of each vertex
-			float noiseValue = PerlinNoise3D.PerlinNoise(Vertices[i], frequency);
+			float noiseValue = PerlinNoise3D.PerlinNoise(Vertices[i] + offset, frequency);
 			float adjustedValue = Mathf.Max(0f, (noiseValue * range)) + 1f;
 			Vertices[i] *= adjustedValue;
 		}
