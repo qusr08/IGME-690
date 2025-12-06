@@ -1,14 +1,22 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class IcosphereMesh : MonoBehaviour
 {
-	[SerializeField] private Material material;
+	[SerializeField] private bool isDirty = false;
 	[Space]
+	[SerializeField] private Gradient colorMap;
+	[SerializeField, Range(0f, 1f)] private float colorVariation = 0.05f;
 	[SerializeField, Range(0, 5)] private int resolution = 2;
-	[SerializeField, Range(0f, 10f)] private float frequency = 5f;
-	[SerializeField, Range(0f, 1f)] private float range = 0.2f;
+	[SerializeField, Range(0, 1000)] private int iterations = 250;
+	[SerializeField, Range(0, 5)] private int leaders = 2;
+	[SerializeField, Range(0, 50)] private int backtrackPrevention = 20;
+	[SerializeField] private Vector2 range = new Vector2(0f, 1f);
+	[Space]
+	[SerializeField, Range(0f, 60f)] private float rotationSpeed = 15f;
+	[SerializeField, Range(0f, 60f)] private float orbitSpeed = 15f;
+	[SerializeField, Range(0f, 30f)] private float orbitDistance = 0f;
+	[SerializeField, Range(0f, 90f)] private float orbitAngleTilt = 15f;
 
 	private Mesh _mesh;
 	private MeshFilter _meshFilter;
@@ -16,15 +24,9 @@ public class IcosphereMesh : MonoBehaviour
 	private Material _materialInstance;
 	private IcosphereGenerator _generator;
 
-	private int _lastResolution = -1;
-	private float _lastFrequency = -1f;
-	private float _lastRange = -1f;
+	private float _orbitAngle;
 
-	private float _moveTimer = 0f;
-	private float _moveSpeed = 0.1f;
-	private Triangle _currentNode;
-
-	private void Awake()
+	protected virtual void Awake()
 	{
 		_generator = new IcosphereGenerator();
 		_meshFilter = GetComponent<MeshFilter>();
@@ -33,42 +35,35 @@ public class IcosphereMesh : MonoBehaviour
 		_mesh = new Mesh();
 		_meshFilter.sharedMesh = _mesh;
 
-		_materialInstance = new Material(material);
+		_materialInstance = new Material(_meshRenderer.material);
 		_meshRenderer.material = _materialInstance;
+
+		isDirty = true;
 	}
 
-	private void Update()
+	protected virtual void Update()
 	{
-		if (_lastResolution != resolution || _lastFrequency != frequency || _lastRange != range)
+		if (isDirty)
 		{
-			_lastResolution = resolution;
-			_lastFrequency = frequency;
-			_lastRange = range;
 			GenerateMesh();
+			isDirty = false;
 		}
 
-		//_moveTimer += Time.deltaTime;
-		//if (_moveTimer >= _moveSpeed)
-		//{
-		//	_moveTimer -= _moveSpeed;
+		_orbitAngle += orbitSpeed * Time.deltaTime;
+		if (_orbitAngle >= 360f)
+			_orbitAngle -= 360f;
 
-		//	Color32[] colors32 = new Color32[_mesh.colors32.Length];
-		//	_mesh.colors32.CopyTo(colors32, 0);
-		//	colors32[_currentNode.Index * 3 + 0] = Color.green;
-		//	colors32[_currentNode.Index * 3 + 1] = Color.green;
-		//	colors32[_currentNode.Index * 3 + 2] = Color.green;
-		//	_mesh.SetColors(colors32);
-
-		//	_currentNode = _currentNode.Neighbors[Random.Range(0, 3)];
-		//}
-
-		transform.rotation *= Quaternion.Euler(0f, 25f * Time.deltaTime, 0f);
+		float orbitX = Mathf.Cos(_orbitAngle * Mathf.Deg2Rad) * orbitDistance;
+		float orbitY = Mathf.Sin(_orbitAngle * Mathf.Deg2Rad) * Mathf.Tan(orbitAngleTilt * Mathf.Deg2Rad) * orbitDistance;
+		float orbitZ = Mathf.Sin(_orbitAngle * Mathf.Deg2Rad) * orbitDistance;
+		transform.localPosition = orbitDistance * new Vector3(orbitX, orbitY, orbitZ);
+		transform.localRotation *= Quaternion.Euler(0f, rotationSpeed * Time.deltaTime, 0f);
 	}
 
 	public void GenerateMesh()
 	{
 		// Create the triangles and vertices for the icosphere mesh
-		_generator.Generate(resolution, frequency, range);
+		_generator.Generate(resolution, iterations, leaders, backtrackPrevention, range);
 
 		// Create lists for storing mesh data
 		int vertexCount = _generator.Triangles.Count * 3;
@@ -88,21 +83,20 @@ public class IcosphereMesh : MonoBehaviour
 			indices[i * 3 + 0] = i * 3 + 0;
 			indices[i * 3 + 1] = i * 3 + 1;
 			indices[i * 3 + 2] = i * 3 + 2;
-
 			vertices[i * 3 + 0] = vertex1;
 			vertices[i * 3 + 1] = vertex2;
 			vertices[i * 3 + 2] = vertex3;
 
 			// Calculate the normal for the triangle plane, then set that to be each of the vertex normals
 			// Each triangle of the mesh is separate, so this works to create appropriate shadows
-			Vector3 triangleNormal = Vector3.Cross(vertex2 - vertex1, vertex3 - vertex1);
-			normals[i * 3 + 0] = triangleNormal.normalized;
-			normals[i * 3 + 1] = triangleNormal.normalized;
-			normals[i * 3 + 2] = triangleNormal.normalized;
+			triangle.Normal = Vector3.Cross(vertex2 - vertex1, vertex3 - vertex1).normalized;
+			normals[i * 3 + 0] = triangle.Normal;
+			normals[i * 3 + 1] = triangle.Normal;
+			normals[i * 3 + 2] = triangle.Normal;
 
 			// Use the height of the triangle to determine the color
-			Vector3 triangleCenter = (vertex1 + vertex2 + vertex3) / 3f;
-			Color color = (triangleCenter.magnitude > 1f ? Color.green : Color.cyan);
+			triangle.Center = (vertex1 + vertex2 + vertex3) / 3f;
+			Color color = GetOffsetColor(colorMap.Evaluate(Utils.Map(triangle.Center.magnitude, range.x, range.y, 0f, 1f)));
 			colors32[i * 3 + 0] = color;
 			colors32[i * 3 + 1] = color;
 			colors32[i * 3 + 2] = color;
@@ -114,7 +108,13 @@ public class IcosphereMesh : MonoBehaviour
 		_mesh.normals = normals;
 		_mesh.SetTriangles(indices, 0);
 		_mesh.SetColors(colors32);
+	}
 
-		_currentNode = _generator.Triangles[0];
+	private Color GetOffsetColor(Color color)
+	{
+		Color.RGBToHSV(color, out float h, out float s, out float v);
+		float newS = Mathf.Clamp01(Random.Range(-colorVariation, colorVariation) + s);
+		float newV = Mathf.Clamp01(Random.Range(-colorVariation, colorVariation) + v);
+		return Color.HSVToRGB(h, newS, newV);
 	}
 }

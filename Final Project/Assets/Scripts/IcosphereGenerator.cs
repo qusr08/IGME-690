@@ -11,12 +11,15 @@ public sealed class IcosphereGenerator
 
 	public IcosphereGenerator() { }
 
-	public void Generate(int resolution, float frequency, float range)
+	public void Generate(int resolution, int iterations, int leaders, int backtrackPrevention, Vector2 range)
 	{
 		CreateIcosahedron();
 		Subdivide(resolution);
 		CalculateTriangleNeighbors();
-		RandomizeVertexHeight(frequency, range);
+		CreateLand(iterations, leaders, backtrackPrevention);
+		AdjustVertexHeights(range);
+
+		//RandomizeVertexHeight(frequency, range, minHeight);
 	}
 
 	private void CreateIcosahedron()
@@ -148,7 +151,73 @@ public sealed class IcosphereGenerator
 		}
 	}
 
-	private void RandomizeVertexHeight(float frequency, float range)
+	private void CreateLand(int iterations, int leaders, int backtrackPrevention)
+	{
+		List<Triangle> currentTriangles = new List<Triangle>();
+		for (int i = 0; i < leaders; i++)
+		{
+			currentTriangles.Add(Triangles[Random.Range(0, Triangles.Count)]);
+		}
+
+		Queue<Triangle> lastTriangles = new Queue<Triangle>();
+		List<Triangle> available = new List<Triangle>();
+
+		for (int i = 0; i < iterations; i++)
+		{
+			for (int j = 0; j < leaders; j++)
+			{
+				// Add the current triangle to the list of traversed triangles
+				// If there are more than 10 in the queue, then remove the oldest one
+				lastTriangles.Enqueue(currentTriangles[j]);
+				if (lastTriangles.Count > backtrackPrevention * leaders)
+					lastTriangles.Dequeue();
+
+				// Increase the height of each vertex that is a part of this triangle
+				Vertices[currentTriangles[j].A] = Vertices[currentTriangles[j].A].normalized * (Vertices[currentTriangles[j].A].magnitude + 1f);
+				Vertices[currentTriangles[j].B] = Vertices[currentTriangles[j].B].normalized * (Vertices[currentTriangles[j].B].magnitude + 1f);
+				Vertices[currentTriangles[j].C] = Vertices[currentTriangles[j].C].normalized * (Vertices[currentTriangles[j].C].magnitude + 1f);
+
+				// Make sure to not immediately backtrack onto triangles that were just traversed
+				available.Clear();
+				if (!lastTriangles.Contains(currentTriangles[j].Neighbors[0]))
+					available.Add(currentTriangles[j].Neighbors[0]);
+				if (!lastTriangles.Contains(currentTriangles[j].Neighbors[1]))
+					available.Add(currentTriangles[j].Neighbors[1]);
+				if (!lastTriangles.Contains(currentTriangles[j].Neighbors[2]))
+					available.Add(currentTriangles[j].Neighbors[2]);
+
+				// Get a new random neighbor of the current triangle for the next iteration
+				if (available.Count > 0)
+					currentTriangles[j] = available[Random.Range(0, available.Count)];
+				else
+					currentTriangles[j] = currentTriangles[j].Neighbors[Random.Range(0, 3)];
+			}
+		}
+	}
+
+	private void AdjustVertexHeights(Vector2 range)
+	{
+		// Get the min and max vertex heights
+		float minVertexHeight = int.MaxValue;
+		float maxVertexHeight = int.MinValue;
+		for (int i = 0; i < Vertices.Count; i++)
+		{
+			float height = Vertices[i].magnitude;
+
+			if (height < minVertexHeight)
+				minVertexHeight = height;
+			if (height > maxVertexHeight)
+				maxVertexHeight = height;
+		}
+
+		// Map the min and max vertex heights to the specified range
+		for (int i = 0; i < Vertices.Count; i++)
+		{
+			Vertices[i] = Vertices[i].normalized * Utils.Map(Vertices[i].magnitude, minVertexHeight, maxVertexHeight, range.x, range.y);
+		}
+	}
+
+	private void RandomizeVertexHeight(float frequency, float range, float minHeight)
 	{
 		Vector3 offset = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
 
@@ -156,7 +225,7 @@ public sealed class IcosphereGenerator
 		{
 			// Adjust the distance from the center of the planet of each vertex
 			float noiseValue = PerlinNoise3D.PerlinNoise(Vertices[i] + offset, frequency);
-			float adjustedValue = Mathf.Max(0f, (noiseValue * range)) + 1f;
+			float adjustedValue = Mathf.Max(minHeight, (noiseValue * range)) + 1f;
 			Vertices[i] *= adjustedValue;
 		}
 	}
